@@ -28,6 +28,7 @@ discovery is delegated to @explore.
 
 ## Operating loop
 
+0. Check docs/ for existing documentation before delegating any discovery. Use findings to skip investigations already answered by prior work.
 1. State the planning goal in 1 line.
 2. Identify the minimum facts required to plan safely.
 3. Delegate discovery to @explore — always. Run tasks in parallel when independent.

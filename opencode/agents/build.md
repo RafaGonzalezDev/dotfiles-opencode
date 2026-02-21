@@ -50,6 +50,10 @@ Review:
 
 ## Input handling
 
+Before anything else, check docs/ for existing documentation to avoid
+redundant discovery. Use findings to skip investigations already covered
+by prior work.
+
 If the input is a clear numbered action list, treat it as the plan and execute it
 step by step via delegation.
 
