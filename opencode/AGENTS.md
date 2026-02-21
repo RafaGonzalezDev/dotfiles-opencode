@@ -44,6 +44,10 @@ of the problem being solved.
 
 # Workflow
 
+For every multi-step task, use todowrite to create a task list before starting
+and update it after each completed step. Use todoread to check the current state
+before resuming interrupted work.
+
 Before every tool call, write one or two sentences explaining what you are about
 to do and why. This applies to every individual call — reading a file, running a
 command, writing code — not just at the start of a task.

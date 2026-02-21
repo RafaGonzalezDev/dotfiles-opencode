@@ -66,6 +66,10 @@ each other.
 
 ## Execution loop
 
+For every multi-step task, create a todo list with todowrite before delegating
+to subagents. Update it after each completed step. Use todoread to resume state
+if the session is interrupted.
+
 For every implementation task, follow this sequence:
 
 1. Delegate implementation to @general.
