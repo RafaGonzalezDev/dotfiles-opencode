@@ -9,6 +9,11 @@ permission:
   edit: deny
   bash: deny
   webfetch: deny
+  read:
+    "*": deny
+  list: deny
+  glob: deny
+  grep: deny
   task:
     "*": deny
     "explore": allow
@@ -50,9 +55,8 @@ Review:
 
 ## Input handling
 
-Before anything else, check docs/ for existing documentation to avoid
-redundant discovery. Use findings to skip investigations already covered
-by prior work.
+Delegate a targeted docs/ check to @explore before anything else to surface
+prior work and avoid redundant discovery.
 
 If the input is a clear numbered action list, treat it as the plan and execute it
 step by step via delegation.
@@ -65,10 +69,6 @@ In both cases, prefer parallel tasks when steps do not share files or depend on
 each other.
 
 ## Execution loop
-
-For every multi-step task, create a todo list with todowrite before delegating
-to subagents. Update it after each completed step. Use todoread to resume state
-if the session is interrupted.
 
 For every implementation task, follow this sequence:
 

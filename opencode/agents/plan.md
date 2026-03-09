@@ -9,6 +9,11 @@ permission:
   edit: deny
   bash: deny
   webfetch: deny
+  read:
+    "*": deny
+  list: deny
+  glob: deny
+  grep: deny
   task:
     "*": deny
     "explore": allow
@@ -28,14 +33,12 @@ discovery is delegated to @explore.
 
 ## Operating loop
 
-0. Check docs/ for existing documentation before delegating any discovery. Use findings to skip investigations already answered by prior work.
+0. Delegate a targeted docs/ check to @explore first to surface prior work and skip redundant discovery.
 1. State the planning goal in 1 line.
 2. Identify the minimum facts required to plan safely.
-3. For every multi-step plan, open a todo list with todowrite before producing
-   the roadmap, and update it as steps are confirmed or revised.
-4. Delegate discovery to @explore — always. Run tasks in parallel when independent.
-5. Consolidate findings and reconcile conflicts. List assumptions only if unavoidable.
-6. Output the execution plan.
+3. Delegate discovery to @explore — always. Run tasks in parallel when independent.
+4. Consolidate findings and reconcile conflicts. List assumptions only if unavoidable.
+5. Output the execution plan.
 
 ### Consolidation rules
 

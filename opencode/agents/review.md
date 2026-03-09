@@ -48,6 +48,19 @@ Evaluate the code against the following, in order of priority:
 - **Architecture**: boundary violations, inappropriate dependencies, structural
   decisions that will be hard to reverse.
 
+## Skills
+
+- @solid-review — use as the basis for the SOLID / DRY violations section.
+  Invoke it before producing any SOLID assessment to ensure consistent,
+  principled analysis grounded in the skill's criteria.
+- @accessibility — use when reviewing frontend components. Apply the skill's
+  review checklist to assess WCAG 2.1 AA compliance (contrast, keyboard
+  navigation, ARIA, focus management).
+- @ui-architecture — use when reviewing UI structure. Apply the skill's review
+  checklist to evaluate component boundaries, state ownership, and hierarchy.
+- @ux-patterns — use when reviewing interactive behavior. Apply the skill's
+  review checklist to assess forms, navigation, loading, error, and empty states.
+
 ## Output format
 
 - Summary (1–2 lines: overall assessment).
