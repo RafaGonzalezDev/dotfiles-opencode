@@ -18,186 +18,99 @@ permission:
   edit: allow
 
   bash:
-    "*": ask
+  "*": allow
 
-    # Git: lectura e inspección
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-    "git show*": allow
-    "git branch*": allow
-    "git ls-files*": allow
-    "git rev-parse*": allow
-    "git remote -v*": allow
-    "git fetch*": allow
+  # Git con control humano
+  "git commit*": ask
+  "git reset*": ask
+  "git restore*": ask
+  "git checkout*": ask
+  "git switch*": ask
+  "git rebase*": ask
+  "git merge*": ask
+  "git cherry-pick*": ask
+  "git revert*": ask
+  "git tag*": ask
+  "git stash*": ask
+  "git apply*": ask
+  "git am*": ask
 
-    # Git: mantener siempre control humano
-    "git commit*": ask
-    "git push*": deny
-    "git reset*": ask
-    "git restore*": ask
-    "git checkout*": ask
-    "git switch*": ask
-    "git rebase*": ask
-    "git merge*": ask
-    "git cherry-pick*": ask
-    "git revert*": ask
-    "git tag*": ask
-    "git clean*": deny
+  # Git bloqueado
+  "git push*": deny
+  "git clean*": deny
 
-    # Navegación / inspección shell
-    "pwd*": allow
-    "ls*": allow
-    "find*": allow
-    "tree*": allow
-    "cat*": allow
-    "head*": allow
-    "tail*": allow
-    "wc*": allow
-    "sort*": allow
-    "uniq*": allow
-    "cut*": allow
-    "sed*": allow
-    "awk*": allow
-    "grep*": allow
-    "rg*": allow
-    "which*": allow
+  # Dev servers / procesos persistentes
+  "npm run dev*": deny
+  "npm run start*": deny
+  "npm run serve*": deny
+  "npm run preview*": deny
+  "npm run storybook*": deny
+  "npm run docs:dev*": deny
+  "npm run watch*": deny
 
-    # --- NPM/PNPM/Yarn: auditoría y mantenimiento (allow) ---
-    "npm audit*": allow
-    "npm outdated*": allow
-    "npm fund*": allow
-    "npm ping*": allow
-    "npm view*": allow
-    "npm ls*": allow
-    "npm config*": allow
+  "pnpm run dev*": deny
+  "pnpm run start*": deny
+  "pnpm run serve*": deny
+  "pnpm run preview*": deny
+  "pnpm run storybook*": deny
+  "pnpm run docs:dev*": deny
+  "pnpm run watch*": deny
 
-    "pnpm audit*": allow
-    "pnpm outdated*": allow
-    "pnpm why*": allow
-    "pnpm list*": allow
-    "pnpm config*": allow
+  "yarn dev*": deny
+  "yarn start*": deny
+  "yarn serve*": deny
+  "yarn preview*": deny
+  "yarn storybook*": deny
+  "yarn docs:dev*": deny
+  "yarn watch*": deny
 
-    "yarn audit*": allow
-    "yarn outdated*": allow
-    "yarn why*": allow
-    "yarn list*": allow
-    "yarn config*": allow
+  "vite*": deny
+  "next dev*": deny
+  "next start*": deny
+  "nuxt dev*": deny
+  "nuxt start*": deny
+  "astro dev*": deny
+  "svelte-kit dev*": deny
+  "gatsby develop*": deny
+  "remix dev*": deny
+  "react-scripts start*": deny
+  "webpack serve*": deny
+  "webpack-dev-server*": deny
+  "serve*": deny
 
-    # --- Instalación (allow) ---
-    "npm ci*": allow
-    "npm install*": allow
-    "npm i*": allow
-    "pnpm install*": allow
-    "pnpm i*": allow
-    "yarn install*": allow
+  "ng serve*": deny
+  "nx serve*": deny
+  "nx run *:serve*": deny
+  "nx run *:dev*": deny
 
-    # --- Checks / tests (allow) ---
-    "npm test*": allow
-    "pnpm test*": allow
-    "yarn test*": allow
+  "docker compose up*": deny
+  "docker-compose up*": deny
+  "docker run*": deny
+  "kubectl port-forward*": deny
 
-    "npm run lint*": allow
-    "pnpm run lint*": allow
-    "yarn lint*": allow
+  "python -m http.server*": deny
+  "python -m uvicorn*": deny
+  "uvicorn*": deny
+  "gunicorn*": deny
+  "flask run*": deny
+  "django-admin runserver*": deny
+  "python manage.py runserver*": deny
 
-    "npm run typecheck*": allow
-    "pnpm run typecheck*": allow
-    "yarn typecheck*": allow
+  "dotnet watch run*": deny
+  "mvn spring-boot:run*": deny
+  "gradle bootRun*": deny
+  "./gradlew bootRun*": deny
+  "go run*": deny
+  "cargo run*": deny
 
-    # --- Builds (allow) ---
-    "npm run build*": allow
-    "pnpm run build*": allow
-    "yarn build*": allow
-
-    "npm run compile*": allow
-    "pnpm run compile*": allow
-    "yarn compile*": allow
-
-    "npm run bundle*": allow
-    "pnpm run bundle*": allow
-    "yarn bundle*": allow
-
-    # --- Bloqueo: scripts genéricos que podrían levantar servidores (deny) ---
-    "npm run dev*": deny
-    "npm run start*": deny
-    "npm run serve*": deny
-    "npm run preview*": deny
-    "npm run storybook*": deny
-    "npm run docs:dev*": deny
-    "npm run watch*": deny
-
-    "pnpm run dev*": deny
-    "pnpm run start*": deny
-    "pnpm run serve*": deny
-    "pnpm run preview*": deny
-    "pnpm run storybook*": deny
-    "pnpm run docs:dev*": deny
-    "pnpm run watch*": deny
-
-    "yarn dev*": deny
-    "yarn start*": deny
-    "yarn serve*": deny
-    "yarn preview*": deny
-    "yarn storybook*": deny
-    "yarn docs:dev*": deny
-    "yarn watch*": deny
-
-    # --- Bloqueo: CLIs típicas de dev servers (deny) ---
-    "vite*": deny
-    "next dev*": deny
-    "next start*": deny
-    "nuxt dev*": deny
-    "nuxt start*": deny
-    "astro dev*": deny
-    "svelte-kit dev*": deny
-    "gatsby develop*": deny
-    "remix dev*": deny
-    "react-scripts start*": deny
-    "webpack serve*": deny
-    "webpack-dev-server*": deny
-    "parcel serve*": deny
-    "serve*": deny
-
-    # --- Angular/Nx (deny serve, allow build ya cubierto arriba si va por scripts) ---
-    "ng serve*": deny
-    "nx serve*": deny
-    "nx run *:serve*": deny
-    "nx run *:dev*": deny
-
-    # --- Docker / Kubernetes: exposición de puertos y servicios (deny) ---
-    "docker compose up*": deny
-    "docker-compose up*": deny
-    "docker run*": deny
-    "kubectl port-forward*": deny
-
-    # --- Python servers comunes (deny) ---
-    "python -m http.server*": deny
-    "python -m uvicorn*": deny
-    "uvicorn*": deny
-    "gunicorn*": deny
-    "flask run*": deny
-    "django-admin runserver*": deny
-    "python manage.py runserver*": deny
-
-    # --- .NET (deny) ---
-    "dotnet watch run*": deny
-
-    # --- Java (deny) ---
-    "mvn spring-boot:run*": deny
-    "gradle bootRun*": deny
-    "./gradlew bootRun*": deny
-
-    # --- Go / Rust (deny) ---
-    "go run*": deny
-    "cargo run*": deny
-
-    # --- Bloqueos de seguridad ---
-    "rm *": deny
-    "rm -rf *": deny
-    "del *": deny
-    "rmdir *": deny
-    "sudo *": deny
+  # Destructivos / privilegiados
+  "rm *": deny
+  "rm -rf *": deny
+  "del *": deny
+  "rmdir *": deny
+  "rd *": deny
+  "Remove-Item *": deny
+  "sudo *": deny
 
 ---
 
