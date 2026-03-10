@@ -20,13 +20,20 @@ permission:
   bash:
     "*": ask
 
-    # --- Git: lectura / inspección (allow) ---
-    "git *": allow
-    "git push*": deny
-    "git clean*": deny
+    # Git: lectura e inspección
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "git show*": allow
+    "git branch*": allow
+    "git ls-files*": allow
+    "git rev-parse*": allow
+    "git remote -v*": allow
+    "git fetch*": allow
 
-    # --- Git: operaciones con riesgo (ask) ---
+    # Git: mantener siempre control humano
     "git commit*": ask
+    "git push*": deny
     "git reset*": ask
     "git restore*": ask
     "git checkout*": ask
@@ -36,6 +43,25 @@ permission:
     "git cherry-pick*": ask
     "git revert*": ask
     "git tag*": ask
+    "git clean*": deny
+
+    # Navegación / inspección shell
+    "pwd*": allow
+    "ls*": allow
+    "find*": allow
+    "tree*": allow
+    "cat*": allow
+    "head*": allow
+    "tail*": allow
+    "wc*": allow
+    "sort*": allow
+    "uniq*": allow
+    "cut*": allow
+    "sed*": allow
+    "awk*": allow
+    "grep*": allow
+    "rg*": allow
+    "which*": allow
 
     # --- NPM/PNPM/Yarn: auditoría y mantenimiento (allow) ---
     "npm audit*": allow
