@@ -7,111 +7,113 @@ permission:
   external_directory: ask
   doom_loop: ask
   task:
-    "*": deny
+    '*': deny
 
   read:
-    "*": allow
-    "*.env": deny
-    "*.env.*": deny
-    "*.env.example": allow
+    '*': allow
+    '*.env': deny
+    '*.env.*': deny
+    '*.env.example': allow
 
   edit: allow
 
   bash:
-  "*": allow
+    '*': allow
 
-  # Git con control humano
-  "git commit*": ask
-  "git reset*": ask
-  "git restore*": ask
-  "git checkout*": ask
-  "git switch*": ask
-  "git rebase*": ask
-  "git merge*": ask
-  "git cherry-pick*": ask
-  "git revert*": ask
-  "git tag*": ask
-  "git stash*": ask
-  "git apply*": ask
-  "git am*": ask
+    # Git: mantener siempre control humano
+    'git commit*': ask
+    'git push*': deny
+    'git reset*': ask
+    'git restore*': ask
+    'git checkout*': ask
+    'git switch*': ask
+    'git rebase*': ask
+    'git merge*': ask
+    'git cherry-pick*': ask
+    'git revert*': ask
+    'git tag*': ask
+    'git clean*': deny
 
-  # Git bloqueado
-  "git push*": deny
-  "git clean*": deny
+    # --- Bloqueo: scripts genéricos que podrían levantar servidores (deny) ---
+    'npm run dev*': deny
+    'npm run start*': deny
+    'npm run serve*': deny
+    'npm run preview*': deny
+    'npm run storybook*': deny
+    'npm run docs:dev*': deny
+    'npm run watch*': deny
 
-  # Dev servers / procesos persistentes
-  "npm run dev*": deny
-  "npm run start*": deny
-  "npm run serve*": deny
-  "npm run preview*": deny
-  "npm run storybook*": deny
-  "npm run docs:dev*": deny
-  "npm run watch*": deny
+    'pnpm run dev*': deny
+    'pnpm run start*': deny
+    'pnpm run serve*': deny
+    'pnpm run preview*': deny
+    'pnpm run storybook*': deny
+    'pnpm run docs:dev*': deny
+    'pnpm run watch*': deny
 
-  "pnpm run dev*": deny
-  "pnpm run start*": deny
-  "pnpm run serve*": deny
-  "pnpm run preview*": deny
-  "pnpm run storybook*": deny
-  "pnpm run docs:dev*": deny
-  "pnpm run watch*": deny
+    'yarn dev*': deny
+    'yarn start*': deny
+    'yarn serve*': deny
+    'yarn preview*': deny
+    'yarn storybook*': deny
+    'yarn docs:dev*': deny
+    'yarn watch*': deny
 
-  "yarn dev*": deny
-  "yarn start*": deny
-  "yarn serve*": deny
-  "yarn preview*": deny
-  "yarn storybook*": deny
-  "yarn docs:dev*": deny
-  "yarn watch*": deny
+    # --- Bloqueo: CLIs típicas de dev servers (deny) ---
+    'vite*': deny
+    'next dev*': deny
+    'next start*': deny
+    'nuxt dev*': deny
+    'nuxt start*': deny
+    'astro dev*': deny
+    'svelte-kit dev*': deny
+    'gatsby develop*': deny
+    'remix dev*': deny
+    'react-scripts start*': deny
+    'webpack serve*': deny
+    'webpack-dev-server*': deny
+    'parcel serve*': deny
+    'serve*': deny
 
-  "vite*": deny
-  "next dev*": deny
-  "next start*": deny
-  "nuxt dev*": deny
-  "nuxt start*": deny
-  "astro dev*": deny
-  "svelte-kit dev*": deny
-  "gatsby develop*": deny
-  "remix dev*": deny
-  "react-scripts start*": deny
-  "webpack serve*": deny
-  "webpack-dev-server*": deny
-  "serve*": deny
+    # --- Angular/Nx (deny serve, allow build ya cubierto arriba si va por scripts) ---
+    'ng serve*': deny
+    'nx serve*': deny
+    'nx run *:serve*': deny
+    'nx run *:dev*': deny
 
-  "ng serve*": deny
-  "nx serve*": deny
-  "nx run *:serve*": deny
-  "nx run *:dev*": deny
+    # --- Docker / Kubernetes: exposición de puertos y servicios (deny) ---
+    'docker compose up*': deny
+    'docker-compose up*': deny
+    'docker run*': deny
+    'kubectl port-forward*': deny
 
-  "docker compose up*": deny
-  "docker-compose up*": deny
-  "docker run*": deny
-  "kubectl port-forward*": deny
+    # --- Python servers comunes (deny) ---
+    'python -m http.server*': deny
+    'python -m uvicorn*': deny
+    'uvicorn*': deny
+    'gunicorn*': deny
+    'flask run*': deny
+    'django-admin runserver*': deny
+    'python manage.py runserver*': deny
 
-  "python -m http.server*": deny
-  "python -m uvicorn*": deny
-  "uvicorn*": deny
-  "gunicorn*": deny
-  "flask run*": deny
-  "django-admin runserver*": deny
-  "python manage.py runserver*": deny
+    # --- .NET (deny) ---
+    'dotnet watch run*': deny
 
-  "dotnet watch run*": deny
-  "mvn spring-boot:run*": deny
-  "gradle bootRun*": deny
-  "./gradlew bootRun*": deny
-  "go run*": deny
-  "cargo run*": deny
+    # --- Java (deny) ---
+    'mvn spring-boot:run*': deny
+    'gradle bootRun*': deny
+    './gradlew bootRun*': deny
 
-  # Destructivos / privilegiados
-  "rm *": deny
-  "rm -rf *": deny
-  "del *": deny
-  "rmdir *": deny
-  "rd *": deny
-  "Remove-Item *": deny
-  "sudo *": deny
+    # --- Go / Rust (deny) ---
+    'go run*': deny
+    'cargo run*': deny
 
+    # --- Bloqueos de seguridad ---
+    'rm *': deny
+    'rm -rf *': deny
+    'del *': deny
+    'rmdir *': deny
+    'sudo *': deny
 ---
 
 ## Role
