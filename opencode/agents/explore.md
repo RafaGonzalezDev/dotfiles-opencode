@@ -1,7 +1,7 @@
 ---
 description: Deep read-only repo discovery (resolve ambiguity)
 mode: subagent
-model: minimax-coding-plan/MiniMax-M2.5-highspeed
+model: opencode-go/glm-5
 permission:
   edit: deny
   webfetch: deny

@@ -1,7 +1,7 @@
 ---
 description: Focused debugging agent for diagnosing failures, tracing errors, and validating fixes
 mode: subagent
-model: minimax-coding-plan/MiniMax-M2.5-highspeed
+model: opencode-go/glm-5
 permission:
   edit: deny
   webfetch: deny

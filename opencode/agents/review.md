@@ -1,7 +1,7 @@
 ---
 description: Read-only code review focused on architecture, SOLID principles, security, and maintainability
 mode: subagent
-model: minimax-coding-plan/MiniMax-M2.5-highspeed
+model: opencode-go/glm-5
 permission:
   edit: deny
   bash: deny

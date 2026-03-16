@@ -1,7 +1,7 @@
 ---
 description: Deep execution agent for complex changes (careful, still concise)
 mode: subagent
-model: minimax-coding-plan/MiniMax-M2.5-highspeed
+model: opencode-go/glm-5
 permission:
   webfetch: deny
   external_directory: ask

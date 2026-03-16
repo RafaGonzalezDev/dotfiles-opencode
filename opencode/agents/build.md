@@ -18,6 +18,7 @@ permission:
     "*": deny
     "explore": allow
     "general": allow
+    "testing": allow
     "review": allow
     "debug": allow
 ---
@@ -47,6 +48,12 @@ Debugging:
   resolution after fixes are applied. Invoke when @general encounters a failure
   it cannot resolve, or when checks fail after implementation.
 
+Testing:
+
+- @testing — generate, execute, and analyze tests (unit, integration, E2E).
+  Invoke after @general completes implementation to validate changes. Also
+  invoke after @debug confirms a fix to verify regression coverage.
+
 Review:
 
 - @review — read-only code review focused on architecture, SOLID principles,
@@ -73,12 +80,14 @@ each other.
 For every implementation task, follow this sequence:
 
 1. Delegate implementation to @general.
-2. If @general encounters a failure or checks fail, delegate diagnosis to @debug.
-3. Once @debug identifies the root cause, return to @general for the fix.
-4. Repeat until checks pass.
-5. Delegate code review to @review.
-6. If @review identifies Critical or Major issues, return to @general to address them.
-7. Repeat review until no Critical or Major issues remain.
+2. Delegate test generation and execution to @testing.
+3. If @testing reports failures, delegate diagnosis to @debug.
+4. Once @debug identifies the root cause, return to @general for the fix.
+5. Delegate validation to @testing again to confirm resolution.
+6. Repeat until all tests pass.
+7. Delegate code review to @review.
+8. If @review identifies Critical or Major issues, return to @general to address them.
+9. Repeat review until no Critical or Major issues remain.
 
 ## Preface before every subagent call (STRICT)
 
