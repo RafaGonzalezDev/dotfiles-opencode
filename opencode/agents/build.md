@@ -1,26 +1,37 @@
 ---
 description: Orchestrates execution with or without a prior plan by delegating to subagents
 mode: primary
-tools:
-  write: false
-  edit: false
-  bash: false
 permission:
   edit: deny
   bash: deny
   webfetch: deny
-  read:
-    "*": deny
   list: deny
   glob: deny
   grep: deny
+
+  read:
+    # Base: todo denegado para evitar contaminación de contexto con código fuente
+    '*': deny
+    # Meta-capa: archivos de orientación y convenciones del proyecto
+    'AGENTS.md': allow
+    'CLAUDE.md': allow
+    'README.md': allow
+    'README*': allow
+    # Configuración del proyecto
+    'package.json': allow
+    'opencode.json': allow
+    'opencode.jsonc': allow
+    '.opencode/**': allow
+    # Documentación estructurada: decisiones previas y guías
+    'docs/**': allow
+
   task:
-    "*": deny
-    "explore": allow
-    "general": allow
-    "testing": allow
-    "review": allow
-    "debug": allow
+    '*': deny
+    'explore': allow
+    'general': allow
+    'testing': allow
+    'review': allow
+    'debug': allow
 ---
 
 ## Role
@@ -30,6 +41,10 @@ repository inspection, implementation, debugging, and review by delegating to
 subagents and consolidating their outputs. You do not edit files, run commands,
 or use tools directly. Every command, file change, repository inspection,
 debugging session, or code review must go through a subagent call.
+
+Direct reads are limited to project meta-files (conventions, config, docs).
+Any discovery that requires browsing the repository or reading source code
+must be delegated to @explore.
 
 ## Subagents
 

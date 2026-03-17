@@ -3,7 +3,7 @@ description: Deep execution agent for complex changes (careful, still concise)
 mode: subagent
 model: opencode-go/glm-5
 permission:
-  webfetch: deny
+  webfetch: ask
   external_directory: ask
   doom_loop: ask
   task:
@@ -20,7 +20,7 @@ permission:
   bash:
     '*': allow
 
-    # Git: mantener siempre control humano
+    # --- Git: mantener siempre control humano ---
     'git commit*': ask
     'git push*': deny
     'git reset*': ask
@@ -33,8 +33,9 @@ permission:
     'git revert*': ask
     'git tag*': ask
     'git clean*': deny
+    'git add*': ask
 
-    # --- Bloqueo: scripts genéricos que podrían levantar servidores (deny) ---
+    # --- Dev servers: procesos que bloquean la sesión (deny) ---
     'npm run dev*': deny
     'npm run start*': deny
     'npm run serve*': deny
@@ -42,7 +43,6 @@ permission:
     'npm run storybook*': deny
     'npm run docs:dev*': deny
     'npm run watch*': deny
-
     'pnpm run dev*': deny
     'pnpm run start*': deny
     'pnpm run serve*': deny
@@ -50,7 +50,6 @@ permission:
     'pnpm run storybook*': deny
     'pnpm run docs:dev*': deny
     'pnpm run watch*': deny
-
     'yarn dev*': deny
     'yarn start*': deny
     'yarn serve*': deny
@@ -58,8 +57,11 @@ permission:
     'yarn storybook*': deny
     'yarn docs:dev*': deny
     'yarn watch*': deny
-
-    # --- Bloqueo: CLIs típicas de dev servers (deny) ---
+    'bun run dev*': deny
+    'bun run start*': deny
+    'bun run serve*': deny
+    'bun run preview*': deny
+    'bun run watch*': deny
     'vite*': deny
     'next dev*': deny
     'next start*': deny
@@ -73,13 +75,24 @@ permission:
     'webpack serve*': deny
     'webpack-dev-server*': deny
     'parcel serve*': deny
-    'serve*': deny
-
-    # --- Angular/Nx (deny serve, allow build ya cubierto arriba si va por scripts) ---
+    'serve *': deny
     'ng serve*': deny
     'nx serve*': deny
     'nx run *:serve*': deny
     'nx run *:dev*': deny
+    'uvicorn*': deny
+    'gunicorn*': deny
+    'flask run*': deny
+    'django-admin runserver*': deny
+    'python manage.py runserver*': deny
+    'python -m http.server*': deny
+    'python -m uvicorn*': deny
+    'dotnet watch run*': deny
+    'mvn spring-boot:run*': deny
+    'gradle bootRun*': deny
+    './gradlew bootRun*': deny
+    'go run*': deny
+    'cargo run*': deny
 
     # --- Docker / Kubernetes: exposición de puertos y servicios (deny) ---
     'docker compose up*': deny
@@ -87,33 +100,20 @@ permission:
     'docker run*': deny
     'kubectl port-forward*': deny
 
-    # --- Python servers comunes (deny) ---
-    'python -m http.server*': deny
-    'python -m uvicorn*': deny
-    'uvicorn*': deny
-    'gunicorn*': deny
-    'flask run*': deny
-    'django-admin runserver*': deny
-    'python manage.py runserver*': deny
-
-    # --- .NET (deny) ---
-    'dotnet watch run*': deny
-
-    # --- Java (deny) ---
-    'mvn spring-boot:run*': deny
-    'gradle bootRun*': deny
-    './gradlew bootRun*': deny
-
-    # --- Go / Rust (deny) ---
-    'go run*': deny
-    'cargo run*': deny
-
-    # --- Bloqueos de seguridad ---
+    # --- Destructivos: filesystem (deny) ---
     'rm *': deny
-    'rm -rf *': deny
-    'del *': deny
     'rmdir *': deny
+    'del *': deny
+    'shred *': deny
+    'dd *': deny
+    'mkfs*': deny
+    'fdisk*': deny
+    'format *': deny
+
+    # --- Escalada de privilegios (deny) ---
     'sudo *': deny
+    'su *': deny
+    'doas *': deny
 ---
 
 ## Role

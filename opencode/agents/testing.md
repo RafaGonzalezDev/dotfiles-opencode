@@ -7,80 +7,148 @@ permission:
   external_directory: ask
   doom_loop: ask
   task:
-    "*": deny
+    '*': deny
 
   read:
-    "*": allow
-    "*.env": deny
-    "*.env.*": deny
-    "*.env.example": allow
+    '*': allow
+    '*.env': deny
+    '*.env.*': deny
+    '*.env.example': allow
 
   edit:
-    "*": deny
-    "**/__tests__/**": allow
-    "**/*.test.*": allow
-    "**/*.spec.*": allow
-    "**/test/**": allow
-    "**/tests/**": allow
-    "**/e2e/**": allow
-    "**/cypress/**": allow
-    "**/playwright/**": allow
-    "**/playwright.config.*": allow
-    "**/vitest.config.*": allow
-    "**/jest.config.*": allow
-    "**/.storybook/**": deny
-    "**/coverage/**": deny
+    '*': deny
+    '**/__tests__/**': allow
+    '**/*.test.*': allow
+    '**/*.spec.*': allow
+    '**/test/**': allow
+    '**/tests/**': allow
+    '**/e2e/**': allow
+    '**/cypress/**': allow
+    '**/playwright/**': allow
+    '**/playwright.config.*': allow
+    '**/vitest.config.*': allow
+    '**/jest.config.*': allow
+    '**/.storybook/**': deny
+    '**/coverage/**': deny
 
   list: allow
   glob: allow
   grep: allow
 
   bash:
-    "*": deny
+    '*': allow
 
-    # --- Test runners ---
-    "npm test*": allow
-    "pnpm test*": allow
-    "yarn test*": allow
-    "npm run test*": allow
-    "pnpm run test*": allow
-    "yarn run test*": allow
-    "npx vitest*": allow
-    "npx jest*": allow
-    "npx playwright test*": allow
-    "npx playwright install*": allow
-    "npx cypress run*": allow
+    # --- Git: operaciones que modifican estado (deny) ---
+    'git commit*': deny
+    'git push*': deny
+    'git reset*': deny
+    'git restore*': deny
+    'git checkout*': deny
+    'git switch*': deny
+    'git rebase*': deny
+    'git merge*': deny
+    'git cherry-pick*': deny
+    'git revert*': deny
+    'git tag*': deny
+    'git clean*': deny
+    'git add*': deny
+    'git stash*': deny
 
-    # --- E2E dev server (managed by Playwright webServer config) ---
-    # Playwright starts and stops the dev server automatically.
-    # These are allowed only because Playwright needs them for E2E execution.
-    "npx ng serve*": allow
-    "npm run serve:mock*": allow
-    "pnpm run serve:mock*": allow
-    "yarn serve:mock*": allow
+    # --- Instalación de dependencias: puede alterar lockfiles y node_modules (deny) ---
+    'npm install*': deny
+    'npm i *': deny
+    'pnpm install*': deny
+    'pnpm add*': deny
+    'yarn install*': deny
+    'yarn add*': deny
+    'bun install*': deny
+    'bun add*': deny
+    'pip install*': deny
+    'cargo add*': deny
+    'go get*': deny
 
-    # --- Coverage ---
-    "npx vitest --coverage*": allow
-    "npx jest --coverage*": allow
-    "npx c8*": allow
-    "npx nyc*": allow
+    # --- Dev servers manuales: Playwright los gestiona via webServer config (deny) ---
+    # El agente no arranca dev servers manualmente; Playwright maneja su ciclo de vida.
+    'npm run dev*': deny
+    'npm run start*': deny
+    'npm run serve*': deny
+    'npm run preview*': deny
+    'npm run storybook*': deny
+    'npm run docs:dev*': deny
+    'npm run watch*': deny
+    'pnpm run dev*': deny
+    'pnpm run start*': deny
+    'pnpm run serve*': deny
+    'pnpm run preview*': deny
+    'pnpm run storybook*': deny
+    'pnpm run docs:dev*': deny
+    'pnpm run watch*': deny
+    'yarn dev*': deny
+    'yarn start*': deny
+    'yarn serve*': deny
+    'yarn preview*': deny
+    'yarn storybook*': deny
+    'yarn docs:dev*': deny
+    'yarn watch*': deny
+    'bun run dev*': deny
+    'bun run start*': deny
+    'bun run serve*': deny
+    'bun run preview*': deny
+    'bun run watch*': deny
+    'vite*': deny
+    'next dev*': deny
+    'next start*': deny
+    'nuxt dev*': deny
+    'nuxt start*': deny
+    'astro dev*': deny
+    'svelte-kit dev*': deny
+    'gatsby develop*': deny
+    'remix dev*': deny
+    'react-scripts start*': deny
+    'webpack serve*': deny
+    'webpack-dev-server*': deny
+    'parcel serve*': deny
+    'serve *': deny
+    'nx serve*': deny
+    'nx run *:serve*': deny
+    'nx run *:dev*': deny
+    'uvicorn*': deny
+    'gunicorn*': deny
+    'flask run*': deny
+    'django-admin runserver*': deny
+    'python manage.py runserver*': deny
+    'python -m http.server*': deny
+    'python -m uvicorn*': deny
+    'dotnet watch run*': deny
+    'mvn spring-boot:run*': deny
+    'gradle bootRun*': deny
+    './gradlew bootRun*': deny
+    'go run*': deny
+    'cargo run*': deny
 
-    # --- Type checking (useful for test validation) ---
-    "npm run typecheck*": allow
-    "pnpm run typecheck*": allow
-    "yarn typecheck*": allow
-    "npx tsc --noEmit*": allow
+    # Excepción: ng serve gestionado por Playwright webServer (deny manual, allow vía config)
+    'ng serve*': deny
 
-    # --- Git (read-only, for diffing what changed) ---
-    "git diff*": allow
-    "git log*": allow
-    "git show*": allow
-    "git grep*": allow
+    # --- Docker / Kubernetes: exposición de puertos y servicios (deny) ---
+    'docker compose up*': deny
+    'docker-compose up*': deny
+    'docker run*': deny
+    'kubectl port-forward*': deny
 
-    # --- Bloqueos de seguridad ---
-    "rm *": deny
-    "rm -rf *": deny
-    "sudo *": deny
+    # --- Destructivos: filesystem (deny) ---
+    'rm *': deny
+    'rmdir *': deny
+    'del *': deny
+    'shred *': deny
+    'dd *': deny
+    'mkfs*': deny
+    'fdisk*': deny
+    'format *': deny
+
+    # --- Escalada de privilegios (deny) ---
+    'sudo *': deny
+    'su *': deny
+    'doas *': deny
 ---
 
 ## Role
