@@ -1,7 +1,6 @@
 ---
 description: Focused debugging agent for diagnosing failures, tracing errors, and validating fixes
 mode: subagent
-model: opencode-go/glm-5
 permission:
   edit: deny
   webfetch: deny

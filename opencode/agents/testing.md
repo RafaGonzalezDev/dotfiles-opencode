@@ -1,7 +1,6 @@
 ---
 description: Focused testing agent for generating, executing, and analyzing test suites across all levels (unit, integration, E2E)
 mode: subagent
-model: opencode-go/glm-5
 permission:
   webfetch: deny
   external_directory: ask

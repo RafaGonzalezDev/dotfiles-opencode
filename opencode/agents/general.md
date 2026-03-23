@@ -1,7 +1,6 @@
 ---
 description: Deep execution agent for complex changes (careful, still concise)
 mode: subagent
-model: opencode-go/glm-5
 permission:
   webfetch: ask
   external_directory: ask
@@ -155,6 +154,7 @@ discovery pass via the orchestrator before acting.
   AA criteria during implementation, not as a post-hoc check.
 - @ui-architecture — use when designing or implementing UI component hierarchies,
   deciding where state lives, or structuring feature folders.
+- @jira-ticket — use when turning a request, bug report, feature idea, or technical need into a well-structured Jira ticket with clear summary, description, acceptance criteria, and suggested metadata.
 
 ## Output format
 

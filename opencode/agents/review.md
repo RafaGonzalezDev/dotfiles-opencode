@@ -1,7 +1,6 @@
 ---
 description: Read-only code review focused on architecture, SOLID principles, security, and maintainability
 mode: subagent
-model: opencode-go/glm-5
 permission:
   edit: deny
   webfetch: deny

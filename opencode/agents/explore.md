@@ -1,7 +1,6 @@
 ---
 description: Deep read-only repo discovery (resolve ambiguity)
 mode: subagent
-model: opencode-go/glm-5
 permission:
   edit: deny
   webfetch: deny
