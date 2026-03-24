@@ -16,5 +16,56 @@
       "url": "https://mcp.atlassian.com/v1/mcp",
       "enabled": true
     }
+  },
+  "agent": {
+    "plan": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true,
+        "atlassian*": true
+      }
+    },
+    "build": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true,
+        "atlassian*": true
+      }
+    },
+    "explore": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true,
+        "atlassian*": true
+      }
+    },
+    "general": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true,
+        "atlassian*": true
+      }
+    },
+    "testing": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true,
+        "atlassian*": true
+      }
+    },
+    "debug": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true,
+        "atlassian*": true
+      }
+    },
+    "review": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true,
+        "atlassian*": true
+      }
+    }
   }
 }
