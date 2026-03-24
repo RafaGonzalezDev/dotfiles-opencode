@@ -47,10 +47,9 @@ All ticket content must be written in Spanish, regardless of the language used i
 ### Story
 
 Represents a new feature or behavior that delivers value to the user or the business.
-
 ```
 ### Resumen
-[Verbo de acción] + [qué] + [en qué contexto]
+Verbo de acción + qué + en qué contexto
 
 ### Tipo de issue
 Story
@@ -73,15 +72,9 @@ Story
 - ...
 
 ### Criterios de aceptación
-- [ ] ...
-- [ ] ...
-- [ ] ...
-
-### Metadatos sugeridos
-- Prioridad: Alta | Media | Baja
-- Etiquetas: ...
-- Componente: ...
-- Responsable: (a asignar por el equipo)
+- ...
+- ...
+- ...
 ```
 
 ---
@@ -89,10 +82,9 @@ Story
 ### Task
 
 Represents internal technical work that does not deliver functionality directly visible to the user: refactoring, migrations, configuration, infrastructure improvements, etc.
-
 ```
 ### Resumen
-[Verbo de acción] + [qué] + [en qué sistema o capa]
+Verbo de acción + qué + en qué sistema o capa
 
 ### Tipo de issue
 Task
@@ -115,15 +107,9 @@ Task
 - ...
 
 ### Criterios de finalización
-- [ ] ...
-- [ ] ...
-- [ ] ...
-
-### Metadatos sugeridos
-- Prioridad: Alta | Media | Baja
-- Etiquetas: ...
-- Componente: ...
-- Responsable: (a asignar por el equipo)
+- ...
+- ...
+- ...
 ```
 
 ---
@@ -131,10 +117,9 @@ Task
 ### Bug
 
 Represents incorrect or unexpected behavior that must be corrected.
-
 ```
 ### Resumen
-[Corregir] + [qué falla] + [en qué pantalla o flujo]
+Corregir + qué falla + en qué pantalla o flujo
 
 ### Tipo de issue
 Bug
@@ -167,15 +152,9 @@ Bug
 - ...
 
 ### Criterios de aceptación
-- [ ] El comportamiento incorrecto ya no ocurre
-- [ ] ...
-- [ ] Los flujos existentes no se ven afectados por la corrección
-
-### Metadatos sugeridos
-- Prioridad: Crítica | Alta | Media | Baja
-- Etiquetas: ...
-- Componente: ...
-- Responsable: (a asignar por el equipo)
+- El comportamiento incorrecto ya no ocurre
+- ...
+- Los flujos existentes no se ven afectados por la corrección
 ```
 
 ---
@@ -183,10 +162,9 @@ Bug
 ### Spike
 
 Represents a research or technical exploration task whose goal is to reduce uncertainty before committing to a solution. It does not deliver functionality but produces documented knowledge.
-
 ```
 ### Resumen
-[Investigar | Evaluar | Explorar] + [qué] + [con qué objetivo]
+Investigar | Evaluar | Explorar + qué + con qué objetivo
 
 ### Tipo de issue
 Spike
@@ -209,15 +187,9 @@ Spike
 - ...
 
 ### Entregables esperados
-- [ ] Documento de decisión o recomendación con argumentos
-- [ ] ...
-- [ ] (Opcional) Prueba de concepto desechable
-
-### Metadatos sugeridos
-- Prioridad: Alta | Media | Baja
-- Etiquetas: ...
-- Componente: ...
-- Responsable: (a asignar por el equipo)
+- Documento de decisión o recomendación con argumentos
+- ...
+- (Opcional) Prueba de concepto desechable
 ```
 
 ---
@@ -227,12 +199,23 @@ Spike
 **If Jira MCP is available:**
 - First inspect which Jira tools are exposed
 - Map the generated fields to the MCP tool schema
+- Set metadata (priority, labels, component) as dedicated issue fields via MCP — never include them in the description body
 - Create the issue only after the payload is complete and coherent
 - If required project fields are missing, ask only for those fields
-- After creation, return the created issue key and a compact summary of what was sent
+- After creation, return the created issue key and a compact summary of what was sent, including which metadata fields were set
 
 **If Jira MCP is not available:**
 - Generate a copy-pasteable ticket body
+- Append a separate section after the description — outside the description block — with the suggested metadata values, clearly labelled so the user knows these must be set manually in Jira:
+```
+---
+Metadatos a configurar manualmente en Jira:
+- Prioridad: Alta | Media | Baja
+- Etiquetas: ...
+- Componente: ...
+- Responsable: (a asignar por el equipo)
+```
+
 - Make explicit that the result is a draft and has not been created in Jira
 
 ---
@@ -319,11 +302,12 @@ Bug
 - Revisar si el backend ya rechaza la petición y alinear la validación frontend con ese comportamiento
 
 #### Criterios de aceptación
-- [ ] El formulario no puede enviarse sin una cuenta de origen seleccionada
-- [ ] Se muestra un mensaje de validación claro cuando el campo está vacío
-- [ ] Los flujos de transferencia válidos existentes siguen funcionando correctamente
+- El formulario no puede enviarse sin una cuenta de origen seleccionada
+- Se muestra un mensaje de validación claro cuando el campo está vacío
+- Los flujos de transferencia válidos existentes siguen funcionando correctamente
 
-#### Metadatos sugeridos
+---
+Metadatos a configurar manualmente en Jira:
 - Prioridad: Media
 - Etiquetas: transferencias, validación, frontend
 - Componente: pagos
@@ -362,11 +346,12 @@ Spike
 - La solución debe ser compatible con Angular 21 y la configuración actual de shell + remotes
 
 #### Entregables esperados
-- [ ] Documento de decisión con conclusión clara y argumentos
-- [ ] Recomendación sobre viabilidad y enfoque si procede
-- [ ] PoC desechable como evidencia técnica (opcional)
+- Documento de decisión con conclusión clara y argumentos
+- Recomendación sobre viabilidad y enfoque si procede
+- PoC desechable como evidencia técnica (opcional)
 
-#### Metadatos sugeridos
+---
+Metadatos a configurar manualmente en Jira:
 - Prioridad: Media
 - Etiquetas: microfrontends, native-federation, arquitectura, investigación
 - Componente: arquitectura-frontend
