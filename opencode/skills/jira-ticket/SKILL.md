@@ -200,6 +200,7 @@ Spike
 - First inspect which Jira tools are exposed
 - Map the generated fields to the MCP tool schema
 - Set metadata (priority, labels, component) as dedicated issue fields via MCP — never include them in the description body
+- To edit metadata of an existing issue, use `atlassian_editJiraIssue` and include metadata in the `fields` parameter
 - Create the issue only after the payload is complete and coherent
 - If required project fields are missing, ask only for those fields
 - After creation, return the created issue key and a compact summary of what was sent, including which metadata fields were set
@@ -209,11 +210,11 @@ Spike
 - Append a separate section after the description — outside the description block — with the suggested metadata values, clearly labelled so the user knows these must be set manually in Jira:
 ```
 ---
-Metadatos a configurar manualmente en Jira:
-- Prioridad: Alta | Media | Baja
-- Etiquetas: ...
-- Componente: ...
-- Responsable: (a asignar por el equipo)
+Metadata (configure using `atlassian_editJiraIssue` with `fields` parameter):
+- Priority: Alta | Media | Baja (fill with actual value)
+- Labels: ... (comma-separated list)
+- Component: ... (component name)
+- Assignee: (a asignar por el equipo)
 ```
 
 - Make explicit that the result is a draft and has not been created in Jira
@@ -307,11 +308,11 @@ Bug
 - Los flujos de transferencia válidos existentes siguen funcionando correctamente
 
 ---
-Metadatos a configurar manualmente en Jira:
-- Prioridad: Media
-- Etiquetas: transferencias, validación, frontend
-- Componente: pagos
-- Responsable: (a asignar por el equipo)
+Metadata (configure using `atlassian_editJiraIssue` with `fields` parameter):
+- Priority: Media
+- Labels: transferencias, validación, frontend
+- Component: pagos
+- Assignee: (to be assigned by the team)
 
 ---
 
@@ -351,8 +352,8 @@ Spike
 - PoC desechable como evidencia técnica (opcional)
 
 ---
-Metadatos a configurar manualmente en Jira:
-- Prioridad: Media
-- Etiquetas: microfrontends, native-federation, arquitectura, investigación
-- Componente: arquitectura-frontend
-- Responsable: (a asignar por el equipo)
+Metadata (configure using `atlassian_editJiraIssue` with `fields` parameter):
+- Priority: Media
+- Labels: microfrontends, native-federation, arquitectura, investigación
+- Component: arquitectura-frontend
+- Assignee: (to be assigned by the team)
