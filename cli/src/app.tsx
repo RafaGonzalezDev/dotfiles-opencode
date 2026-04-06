@@ -11,6 +11,7 @@ import { verifyInstallation } from './verify/index.js';
 import { WelcomeScreen } from './ui/welcome.js';
 import { SystemCheckScreen } from './ui/system-check.js';
 import { OpenCodeInstallScreen } from './ui/opencode-install.js';
+import { OpenCodeUpdateScreen } from './ui/opencode-update.js';
 import { ConflictResolutionScreen } from './ui/conflict-resolution.js';
 import { InstallationProgressScreen } from './ui/installation-progress.js';
 import { SummaryScreen } from './ui/summary.js';
@@ -21,7 +22,7 @@ import { DifferencesScreen } from './ui/differences.js';
 import { InstallConfirmationScreen } from './ui/install-confirmation.js';
 import { FrameworkSelectionScreen } from './ui/framework-selection.js';
 import { installHomebrew } from './installers/homebrew.js';
-import { getOpenCodeInstallCommand, installOpenCode } from './installers/opencode.js';
+import { getOpenCodeInstallCommand, installOpenCode, updateOpenCode } from './installers/opencode.js';
 import { MANAGED_CONFIG_ENTRIES } from './utils/managed-config.js';
 import type {
   BackupEntry,
@@ -30,7 +31,9 @@ import type {
   ConfigDetectionResult,
   FrameworkDefinition,
   InstallResult,
+  OpenCodeInstallMethod,
   OpenCodeStatus,
+  OpenCodeUpdateResult,
   SystemInfo,
   VerifyResult,
 } from './types/index.js';
@@ -49,6 +52,7 @@ type Phase =
   | 'system-check'
   | 'prerequisites-blocked'
   | 'opencode-check'
+  | 'opencode-update'
   | 'opencode-install'
   | 'opencode-installing'
   | 'opencode-manual'
@@ -66,7 +70,7 @@ type Phase =
 
 const INSTALL_MESSAGES = [
   'Installing...',
-  'Un momento...',
+  'Hold on...',
   'Casi listo...',
   'Finalizando...',
 ];
@@ -79,12 +83,19 @@ export function App({ flags }: AppProps) {
   const [openCodeStatus, setOpenCodeStatus] = useState<OpenCodeStatus | null>(null);
   const [frameworks, setFrameworks] = useState<FrameworkDefinition[]>([]);
   const [selectedFramework, setSelectedFramework] = useState<FrameworkDefinition | null>(null);
+  const [currentFramework, setCurrentFramework] = useState<FrameworkDefinition | null>(null);
   const [configDetection, setConfigDetection] = useState<ConfigDetectionResult | null>(null);
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
   const [installResult, setInstallResult] = useState<InstallResult | null>(null);
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
   const [installMessage, setInstallMessage] = useState(INSTALL_MESSAGES[0]);
   const [opencodeInstallError, setOpencodeInstallError] = useState<string | null>(null);
+  const [openCodeUpdateResult, setOpenCodeUpdateResult] = useState<OpenCodeUpdateResult>({
+    status: 'idle',
+    method: null,
+    previousVersion: null,
+    currentVersion: null,
+  });
   const [manualInstallCommand, setManualInstallCommand] = useState<string | null>(null);
   const [recentBackups, setRecentBackups] = useState<BackupEntry[]>([]);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
@@ -140,6 +151,19 @@ export function App({ flags }: AppProps) {
       setOpenCodeStatus(status);
 
       if (status.installed) {
+        setOpencodeInstallError(null);
+        setOpenCodeUpdateResult({
+          status: 'idle',
+          method: null,
+          previousVersion: status.version,
+          currentVersion: status.version,
+        });
+
+        if (status.installMethods.length > 0) {
+          setPhase('opencode-update');
+          return;
+        }
+
         await loadFrameworksAndContinue();
       } else {
         setOpencodeInstallError(null);
@@ -147,7 +171,7 @@ export function App({ flags }: AppProps) {
       }
     } catch (error) {
       console.error('OpenCode check failed:', error);
-      setOpenCodeStatus({ installed: false, version: null, path: null });
+      setOpenCodeStatus({ installed: false, version: null, path: null, installMethods: [] });
       setOpencodeInstallError(null);
       setPhase('opencode-install');
     }
@@ -174,13 +198,10 @@ export function App({ flags }: AppProps) {
         availableFrameworks.find((framework) => framework.id === 'default') ||
         availableFrameworks[0];
 
-      setSelectedFramework(initialFramework);
+      const detectedFramework = await detectCurrentFramework(availableFrameworks);
+      setCurrentFramework(detectedFramework);
 
-      if (flags.force) {
-        setPhase('config-detection');
-        await runConfigDetection(initialFramework.id);
-        return;
-      }
+      setSelectedFramework(initialFramework);
 
       setPhase('framework-selection');
     } catch (error) {
@@ -194,6 +215,24 @@ export function App({ flags }: AppProps) {
       setVerifyResult({ valid: false, errors: ['Framework discovery failed'], warnings: [] });
       setPhase('summary');
     }
+  }
+
+  async function detectCurrentFramework(
+    availableFrameworks: FrameworkDefinition[]
+  ): Promise<FrameworkDefinition | null> {
+    for (const framework of availableFrameworks) {
+      const detection = await detectConfig(framework.id);
+      const isExactMatch =
+        detection.configDirExists &&
+        detection.files.length > 0 &&
+        detection.files.every((file) => file.status === 'identical');
+
+      if (isExactMatch) {
+        return framework;
+      }
+    }
+
+    return null;
   }
 
   const handleHomebrewInstall = async () => {
@@ -252,6 +291,63 @@ export function App({ flags }: AppProps) {
     setPhase('opencode-manual');
   };
 
+  const handleOpenCodeUpdate = async (method: OpenCodeInstallMethod) => {
+    const previousVersion = openCodeStatus?.version || null;
+    setOpencodeInstallError(null);
+    setOpenCodeUpdateResult({
+      status: 'idle',
+      method,
+      previousVersion,
+      currentVersion: previousVersion,
+    });
+    setPhase('opencode-installing');
+
+    const result = await updateOpenCode(method, (message) => {
+      setInstallMessage(message);
+    });
+
+    if (!result.success) {
+      setOpenCodeUpdateResult({
+        status: 'failed',
+        method,
+        previousVersion,
+        currentVersion: previousVersion,
+        error: result.error || 'Failed to update OpenCode.',
+      });
+      setOpencodeInstallError(result.error || 'Failed to update OpenCode.');
+      setPhase('opencode-update');
+      return;
+    }
+
+    const refreshedStatus = await checkOpenCode();
+    setOpenCodeStatus(refreshedStatus);
+    setOpenCodeUpdateResult({
+      status: 'success',
+      method,
+      previousVersion,
+      currentVersion: refreshedStatus.version,
+    });
+    await loadFrameworksAndContinue();
+  };
+
+  const handleContinueWithoutUpdate = async () => {
+    setOpencodeInstallError(null);
+    setOpenCodeUpdateResult((current) => {
+      if (current.status === 'success') {
+        return current;
+      }
+
+      const currentVersion = openCodeStatus?.version || null;
+      return {
+        status: 'skipped',
+        method: null,
+        previousVersion: currentVersion,
+        currentVersion,
+      };
+    });
+    await loadFrameworksAndContinue();
+  };
+
   async function runConfigDetection(frameworkId: string) {
     try {
       const detection = await detectConfig(frameworkId);
@@ -302,6 +398,18 @@ export function App({ flags }: AppProps) {
     setRestoreMessage(null);
     setPhase('config-detection');
     await runConfigDetection(framework.id);
+  };
+
+  const handleSkipFrameworkInstall = () => {
+    setInstallResult({
+      status: 'skipped',
+      success: true,
+      filesInstalled: 0,
+      errors: [],
+    });
+    setBackupResult(null);
+    setVerifyResult({ valid: true, errors: [], warnings: [] });
+    setPhase('summary');
   };
 
   const handleContinueInstall = async () => {
@@ -519,8 +627,26 @@ export function App({ flags }: AppProps) {
         />
       );
 
+    case 'opencode-update':
+      return (
+        <OpenCodeUpdateScreen
+          status={
+            openCodeStatus || {
+              installed: true,
+              version: null,
+              path: null,
+              installMethods: [],
+            }
+          }
+          errorMessage={opencodeInstallError || openCodeUpdateResult.error || null}
+          onUpdate={(method) => void handleOpenCodeUpdate(method)}
+          onContinueWithoutUpdate={() => void handleContinueWithoutUpdate()}
+          onBack={() => setPhase('welcome')}
+        />
+      );
+
     case 'opencode-installing':
-      return <InstallationProgressScreen phase="Installing OpenCode" messages={[installMessage]} />;
+      return <InstallationProgressScreen phase="Working on OpenCode" messages={[installMessage]} />;
 
     case 'opencode-manual':
       return (
@@ -551,7 +677,9 @@ export function App({ flags }: AppProps) {
         <FrameworkSelectionScreen
           frameworks={frameworks}
           selectedFrameworkId={selectedFramework?.id}
+          openCodeUpdateResult={openCodeUpdateResult}
           onSelect={(framework) => void handleFrameworkSelect(framework)}
+          onSkip={handleSkipFrameworkInstall}
           onCancel={handleCancel}
         />
       );
@@ -564,7 +692,7 @@ export function App({ flags }: AppProps) {
             selectedFramework
               ? `Checking configuration against framework "${selectedFramework.name}"...`
               : 'Checking configuration...',
-            'Un momento...',
+            'Hold on...',
             'Casi listo...',
           ]}
         />
@@ -654,7 +782,7 @@ export function App({ flags }: AppProps) {
       return (
         <InstallationProgressScreen
           phase="Verifying installation"
-          messages={['Verifying...', 'Un momento...', 'Casi listo...']}
+          messages={['Verifying...', 'Hold on...', 'Casi listo...']}
         />
       );
 
@@ -662,6 +790,7 @@ export function App({ flags }: AppProps) {
       return (
         <SummaryScreen
           frameworkName={selectedFramework?.name || selectedFramework?.id || null}
+          currentFrameworkName={currentFramework?.name || currentFramework?.id || null}
           installResult={
             installResult || {
               status: 'failed',
@@ -671,6 +800,7 @@ export function App({ flags }: AppProps) {
             }
           }
           backupResult={backupResult}
+          openCodeUpdateResult={openCodeUpdateResult}
           verifyResult={verifyResult || { valid: false, errors: ['Verification not run'], warnings: [] }}
         />
       );

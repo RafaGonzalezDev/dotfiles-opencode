@@ -1,19 +1,38 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import type { FrameworkDefinition } from '../types/index.js';
-import { KeyHints, ScreenLayout, SectionCard } from './components/primitives.js';
+import type { FrameworkDefinition, OpenCodeUpdateResult } from '../types/index.js';
+import { KeyHints, ScreenLayout, SectionCard, StatusBanner } from './components/primitives.js';
 import { uiColors } from './components/theme.js';
 
 interface FrameworkSelectionScreenProps {
   frameworks: FrameworkDefinition[];
   selectedFrameworkId?: string | null;
+  openCodeUpdateResult?: OpenCodeUpdateResult | null;
   onSelect: (framework: FrameworkDefinition) => void;
+  onSkip: () => void;
   onCancel: () => void;
 }
 
 type FrameworkRow =
   | { type: 'heading'; key: string; label: string }
-  | { type: 'framework'; key: string; framework: FrameworkDefinition };
+  | { type: 'framework'; key: string; framework: FrameworkDefinition }
+  | { type: 'action'; key: string; label: string; value: 'skip' };
+
+function getUpdateFeedback(result: OpenCodeUpdateResult): string {
+  if (result.status === 'success') {
+    if (result.previousVersion && result.currentVersion && result.previousVersion === result.currentVersion) {
+      return `OpenCode is already on version ${result.currentVersion}.`;
+    }
+
+    return `OpenCode updated${result.previousVersion ? ` from ${result.previousVersion}` : ''} to ${result.currentVersion || 'the latest detected version'}.`;
+  }
+
+  if (result.status === 'skipped') {
+    return `OpenCode update skipped. Current version: ${result.currentVersion || 'unknown'}.`;
+  }
+
+  return `OpenCode update failed. Current version: ${result.currentVersion || result.previousVersion || 'unknown'}.`;
+}
 
 function getInitialSelectableIndex(rows: FrameworkRow[], selectedFrameworkId?: string | null): number {
   if (selectedFrameworkId) {
@@ -47,7 +66,9 @@ function getNextSelectableIndex(
 export function FrameworkSelectionScreen({
   frameworks,
   selectedFrameworkId,
+  openCodeUpdateResult,
   onSelect,
+  onSkip,
   onCancel,
 }: FrameworkSelectionScreenProps) {
   const rows = useMemo<FrameworkRow[]>(() => {
@@ -83,6 +104,18 @@ export function FrameworkSelectionScreen({
         });
       }
     }
+
+    nextRows.push({
+      type: 'heading',
+      key: 'heading-actions',
+      label: 'Other actions',
+    });
+    nextRows.push({
+      type: 'action',
+      key: 'action-skip',
+      label: 'Keep current framework',
+      value: 'skip',
+    });
 
     return nextRows;
   }, [frameworks]);
@@ -122,6 +155,11 @@ export function FrameworkSelectionScreen({
 
     if (selectedRow.type === 'framework') {
       onSelect(selectedRow.framework);
+      return;
+    }
+
+    if (selectedRow.type === 'action' && selectedRow.value === 'skip') {
+      onSkip();
     }
   });
 
@@ -129,8 +167,27 @@ export function FrameworkSelectionScreen({
     <ScreenLayout
       title="Choose a framework"
       step="Framework discovery"
-      subtitle="Select which managed OpenCode framework should be installed globally."
-      context={<Text dimColor>The installer will back up and replace the managed entries in ~/.config/opencode/.</Text>}
+      subtitle="Select which managed OpenCode framework should be installed globally, or skip this step."
+      context={
+        <Box flexDirection="column">
+          {openCodeUpdateResult && openCodeUpdateResult.status !== 'idle' && (
+            <Box paddingBottom={1}>
+              <StatusBanner
+                tone={
+                  openCodeUpdateResult.status === 'success'
+                    ? 'success'
+                    : openCodeUpdateResult.status === 'failed'
+                      ? 'danger'
+                      : 'info'
+                }
+              >
+                {getUpdateFeedback(openCodeUpdateResult)}
+              </StatusBanner>
+            </Box>
+          )}
+          <Text dimColor>You can finish after updating OpenCode without replacing the managed entries in ~/.config/opencode/.</Text>
+        </Box>
+      }
       footer={<KeyHints hints={[{ keyLabel: '↑/↓', description: 'move' }, { keyLabel: 'Enter', description: 'select' }, { keyLabel: 'Esc', description: 'cancel' }]} />}
     >
       <SectionCard title="Available frameworks">
@@ -138,14 +195,26 @@ export function FrameworkSelectionScreen({
           {rows.map((row, index) => {
             if (row.type === 'heading') {
               return (
-                <Box key={row.key} marginTop={row.key === 'heading-other' ? 1 : 0}>
+                <Box key={row.key} marginTop={row.key === 'heading-default' ? 0 : 1}>
                   <Text dimColor>{row.label}</Text>
                 </Box>
               );
             }
 
             const isSelected = index === selectedIndex;
-            const label = `${row.framework.name} (${row.framework.id})`;
+            if (row.type === 'action') {
+              return (
+                <Box key={row.key}>
+                  <Box marginRight={1}>
+                    <Text color={isSelected ? uiColors.selected : undefined}>{isSelected ? '>' : ' '}</Text>
+                  </Box>
+                  <Text color={isSelected ? uiColors.accent : undefined} dimColor={!isSelected}>
+                    {row.label}
+                  </Text>
+                </Box>
+              );
+            }
+
             const displayLabel = row.framework.id;
 
             return (

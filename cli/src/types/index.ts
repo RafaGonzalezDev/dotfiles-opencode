@@ -21,7 +21,10 @@ export interface OpenCodeStatus {
   installed: boolean;
   version: string | null;
   path: string | null;
+  installMethods: OpenCodeInstallMethod[];
 }
+
+export type OpenCodeInstallMethod = 'homebrew' | 'npm';
 
 export interface FrameworkDefinition {
   id: string;
@@ -67,7 +70,7 @@ export interface BackupEntry {
 }
 
 export interface InstallResult {
-  status: 'success' | 'partial' | 'failed';
+  status: 'success' | 'partial' | 'failed' | 'skipped';
   success: boolean;
   filesInstalled: number;
   frameworkId?: string;
@@ -78,4 +81,12 @@ export interface VerifyResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
+}
+
+export interface OpenCodeUpdateResult {
+  status: 'idle' | 'skipped' | 'success' | 'failed';
+  method: OpenCodeInstallMethod | null;
+  previousVersion?: string | null;
+  currentVersion?: string | null;
+  error?: string;
 }

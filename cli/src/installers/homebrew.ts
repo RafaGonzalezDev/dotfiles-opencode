@@ -2,7 +2,7 @@ import { execa } from 'execa';
 
 const INSTALL_MESSAGES = [
   'Installing...',
-  'Un momento...',
+  'Hold on...',
   'Casi listo...',
   'Finalizando...',
 ];
