@@ -1,7 +1,8 @@
-import React from 'react';
-import { Box, Text } from 'ink';
-import SelectInput from 'ink-select-input';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Text, useInput } from 'ink';
 import type { FrameworkDefinition } from '../types/index.js';
+import { KeyHints, ScreenLayout, SectionCard } from './components/primitives.js';
+import { uiColors } from './components/theme.js';
 
 interface FrameworkSelectionScreenProps {
   frameworks: FrameworkDefinition[];
@@ -10,56 +11,156 @@ interface FrameworkSelectionScreenProps {
   onCancel: () => void;
 }
 
+type FrameworkRow =
+  | { type: 'heading'; key: string; label: string }
+  | { type: 'framework'; key: string; framework: FrameworkDefinition };
+
+function getInitialSelectableIndex(rows: FrameworkRow[], selectedFrameworkId?: string | null): number {
+  if (selectedFrameworkId) {
+    const selectedIndex = rows.findIndex(
+      (row) => row.type === 'framework' && row.framework.id === selectedFrameworkId
+    );
+
+    if (selectedIndex >= 0) {
+      return selectedIndex;
+    }
+  }
+
+  return rows.findIndex((row) => row.type !== 'heading');
+}
+
+function getNextSelectableIndex(
+  rows: FrameworkRow[],
+  currentIndex: number,
+  direction: 1 | -1
+): number {
+  for (let offset = 1; offset <= rows.length; offset++) {
+    const nextIndex = (currentIndex + offset * direction + rows.length) % rows.length;
+    if (rows[nextIndex]?.type !== 'heading') {
+      return nextIndex;
+    }
+  }
+
+  return currentIndex;
+}
+
 export function FrameworkSelectionScreen({
   frameworks,
   selectedFrameworkId,
   onSelect,
   onCancel,
 }: FrameworkSelectionScreenProps) {
-  const items = frameworks.map((framework) => ({
-    label: `${framework.name} (${framework.id})`,
-    value: framework.id,
-  }));
+  const rows = useMemo<FrameworkRow[]>(() => {
+    const defaultFramework = frameworks.find((framework) => framework.id === 'default') ?? null;
+    const otherFrameworks = frameworks.filter((framework) => framework.id !== 'default');
+    const nextRows: FrameworkRow[] = [];
 
-  items.push({
-    label: 'Cancel installation',
-    value: '__cancel__',
-  });
+    if (defaultFramework) {
+      nextRows.push({
+        type: 'heading',
+        key: 'heading-default',
+        label: 'Default framework',
+      });
+      nextRows.push({
+        type: 'framework',
+        key: `framework-${defaultFramework.id}`,
+        framework: defaultFramework,
+      });
+    }
 
-  const initialIndex = Math.max(
-    0,
-    frameworks.findIndex((framework) => framework.id === selectedFrameworkId)
+    if (otherFrameworks.length > 0) {
+      nextRows.push({
+        type: 'heading',
+        key: 'heading-other',
+        label: 'Other frameworks',
+      });
+
+      for (const framework of otherFrameworks) {
+        nextRows.push({
+          type: 'framework',
+          key: `framework-${framework.id}`,
+          framework,
+        });
+      }
+    }
+
+    return nextRows;
+  }, [frameworks]);
+
+  const [selectedIndex, setSelectedIndex] = useState(() =>
+    getInitialSelectableIndex(rows, selectedFrameworkId)
   );
 
+  useEffect(() => {
+    setSelectedIndex(getInitialSelectableIndex(rows, selectedFrameworkId));
+  }, [rows, selectedFrameworkId]);
+
+  useInput((input, key) => {
+    if (key.escape) {
+      onCancel();
+      return;
+    }
+
+    if (input === 'k' || key.upArrow) {
+      setSelectedIndex((currentIndex) => getNextSelectableIndex(rows, currentIndex, -1));
+      return;
+    }
+
+    if (input === 'j' || key.downArrow) {
+      setSelectedIndex((currentIndex) => getNextSelectableIndex(rows, currentIndex, 1));
+      return;
+    }
+
+    if (!key.return) {
+      return;
+    }
+
+    const selectedRow = rows[selectedIndex];
+    if (!selectedRow) {
+      return;
+    }
+
+    if (selectedRow.type === 'framework') {
+      onSelect(selectedRow.framework);
+    }
+  });
+
   return (
-    <Box flexDirection="column" padding={1}>
-      <Box paddingBottom={1}>
-        <Text bold color="cyan">Choose a framework</Text>
-      </Box>
+    <ScreenLayout
+      title="Choose a framework"
+      step="Framework discovery"
+      subtitle="Select which managed OpenCode framework should be installed globally."
+      context={<Text dimColor>The installer will back up and replace the managed entries in ~/.config/opencode/.</Text>}
+      footer={<KeyHints hints={[{ keyLabel: '↑/↓', description: 'move' }, { keyLabel: 'Enter', description: 'select' }, { keyLabel: 'Esc', description: 'cancel' }]} />}
+    >
+      <SectionCard title="Available frameworks">
+        <Box flexDirection="column">
+          {rows.map((row, index) => {
+            if (row.type === 'heading') {
+              return (
+                <Box key={row.key} marginTop={row.key === 'heading-other' ? 1 : 0}>
+                  <Text dimColor>{row.label}</Text>
+                </Box>
+              );
+            }
 
-      <Box paddingBottom={1}>
-        <Text>Select which OpenCode framework should be installed globally.</Text>
-      </Box>
+            const isSelected = index === selectedIndex;
+            const label = `${row.framework.name} (${row.framework.id})`;
+            const displayLabel = row.framework.id;
 
-      <Box paddingBottom={1}>
-        <Text dimColor>The installer will back up and replace the managed entries in ~/.config/opencode/.</Text>
-      </Box>
-
-      <SelectInput
-        items={items}
-        initialIndex={initialIndex}
-        onSelect={(item) => {
-          if (item.value === '__cancel__') {
-            onCancel();
-            return;
-          }
-
-          const framework = frameworks.find((entry) => entry.id === item.value);
-          if (framework) {
-            onSelect(framework);
-          }
-        }}
-      />
-    </Box>
+            return (
+              <Box key={row.key}>
+                <Box marginRight={1}>
+                  <Text color={isSelected ? uiColors.selected : undefined}>{isSelected ? '>' : ' '}</Text>
+                </Box>
+                <Text color={isSelected ? uiColors.accent : undefined} dimColor={!isSelected}>
+                  {displayLabel}
+                </Text>
+              </Box>
+            );
+          })}
+        </Box>
+      </SectionCard>
+    </ScreenLayout>
   );
 }

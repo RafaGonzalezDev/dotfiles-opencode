@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import type { ConfigDetectionResult, ConfigFile } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
 import { getFrameworkSourceDir } from '../frameworks/index.js';
+import { MANAGED_CONFIG_DIRECTORIES, MANAGED_CONFIG_FILES } from '../utils/managed-config.js';
 
 const CONFIG_DIR = getConfigDir();
 
@@ -83,9 +84,8 @@ export async function detectConfig(frameworkId: string): Promise<ConfigDetection
   }
   
   const files: ConfigFile[] = [];
-  const configFiles = ['opencode.json', 'AGENTS.md'];
   
-  for (const file of configFiles) {
+  for (const file of MANAGED_CONFIG_FILES) {
     const repoPath = path.join(frameworkDir, file);
     const configPath = path.join(CONFIG_DIR, file);
     
@@ -114,30 +114,17 @@ export async function detectConfig(frameworkId: string): Promise<ConfigDetection
     });
   }
   
-  // Check agents directory
-  const repoAgentsDir = path.join(frameworkDir, 'agents');
-  const configAgentsDir = path.join(CONFIG_DIR, 'agents');
-  
-  const repoAgentsExists = await fileExists(repoAgentsDir);
-  
-  if (repoAgentsExists) {
-    files.push({
-      path: 'agents/',
-      status: await compareDirectories(repoAgentsDir, configAgentsDir),
-    });
-  }
-  
-  // Check skills directory
-  const repoSkillsDir = path.join(frameworkDir, 'skills');
-  const configSkillsDir = path.join(CONFIG_DIR, 'skills');
-  
-  const repoSkillsExists = await fileExists(repoSkillsDir);
-  
-  if (repoSkillsExists) {
-    files.push({
-      path: 'skills/',
-      status: await compareDirectories(repoSkillsDir, configSkillsDir),
-    });
+  for (const directory of MANAGED_CONFIG_DIRECTORIES) {
+    const repoDir = path.join(frameworkDir, directory);
+    const configDir = path.join(CONFIG_DIR, directory);
+    const repoDirExists = await fileExists(repoDir);
+
+    if (repoDirExists) {
+      files.push({
+        path: `${directory}/`,
+        status: await compareDirectories(repoDir, configDir),
+      });
+    }
   }
   
   return {

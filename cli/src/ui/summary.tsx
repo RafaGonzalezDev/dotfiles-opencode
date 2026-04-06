@@ -2,6 +2,10 @@ import { Text, Box } from 'ink';
 import React from 'react';
 import type { BackupResult, InstallResult, VerifyResult } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
+import {
+  ScreenLayout,
+  SectionCard,
+} from './components/primitives.js';
 
 interface SummaryScreenProps {
   frameworkName?: string | null;
@@ -20,81 +24,73 @@ export function SummaryScreen({
   const verificationIssues = verifyResult.errors.length > 0;
   const hasErrors = installIssues || verificationIssues;
   const configDir = getConfigDir();
+  const isSuccess = installResult.status === 'success' && !hasErrors;
   const title =
-    installResult.status === 'partial'
-      ? 'Installation completed partially'
-      : hasErrors
-        ? 'Installation completed with errors'
-        : 'Installation successful!';
-  const titleColor =
-    installResult.status === 'success' && !hasErrors ? 'green' : installResult.status === 'partial' ? 'yellow' : 'red';
+    isSuccess
+      ? 'Installation successful!'
+      : installResult.status === 'partial'
+        ? 'Installation completed partially'
+        : 'Installation completed with errors';
+  const subtitle =
+    isSuccess
+      ? 'The managed OpenCode configuration has been installed successfully.'
+      : installResult.status === 'partial'
+        ? 'The install finished with recoverable issues. Review warnings and errors below.'
+        : 'The setup finished with errors. Review the reported issues before retrying.';
   
   return (
-    <Box flexDirection="column" padding={1}>
+    <ScreenLayout
+      title={title}
+      step="Run complete"
+      subtitle={subtitle}
+    >
       <Box paddingBottom={1}>
-        <Text bold color={titleColor}>{title}</Text>
-      </Box>
-      
-      <Box paddingBottom={1}>
-        <Text>Files installed: {installResult.filesInstalled}</Text>
+        <SectionCard title="Details">
+          <Text>Config path: <Text color="cyan">{configDir}</Text></Text>
+          {backupResult?.backupPath && (
+            <Text>
+              Backup path:{' '}
+              <Text dimColor>
+                {backupResult.backupPath}
+                {backupResult.frameworkId ? ` (${backupResult.frameworkId})` : ''}
+              </Text>
+            </Text>
+          )}
+          <Text>
+            Next step: <Text bold>opencode --version</Text>
+          </Text>
+        </SectionCard>
       </Box>
 
-      {frameworkName && (
-        <Box paddingBottom={1}>
-          <Text>Framework: {frameworkName}</Text>
-        </Box>
-      )}
-      
-      {backupResult && backupResult.backupPath && (
-        <Box paddingBottom={1}>
-          <Text dimColor>Backup created at:</Text>
-        </Box>
-      )}
-      {backupResult && backupResult.backupPath && (
-        <Text dimColor>
-          {'  '}
-          {backupResult.backupPath}
-          {backupResult.frameworkId ? ` (${backupResult.frameworkId})` : ''}
-        </Text>
-      )}
-
-      <Box paddingTop={1}>
-        <Text dimColor>Configuration available at:</Text>
-      </Box>
-      <Text dimColor>  {configDir}</Text>
-      
       {installIssues && (
-        <Box flexDirection="column" paddingTop={1}>
-          <Text color="red">Install errors:</Text>
-          {installResult.errors.map((error) => (
-            <Text key={error} color="red" dimColor>  - {error}</Text>
-          ))}
+        <Box paddingBottom={1}>
+          <SectionCard title="Install errors">
+            {installResult.errors.map((error) => (
+              <Text key={error} color="red">- {error}</Text>
+            ))}
+          </SectionCard>
         </Box>
       )}
 
       {verifyResult.warnings.length > 0 && (
-        <Box flexDirection="column" paddingTop={1}>
-          <Text color="yellow">Warnings:</Text>
-          {verifyResult.warnings.map((warning) => (
-            <Text key={warning} color="yellow" dimColor>  - {warning}</Text>
-          ))}
+        <Box paddingBottom={1}>
+          <SectionCard title="Warnings">
+            {verifyResult.warnings.map((warning) => (
+              <Text key={warning} color="yellow">- {warning}</Text>
+            ))}
+          </SectionCard>
         </Box>
       )}
       
       {verificationIssues && (
-        <Box flexDirection="column" paddingTop={1}>
-          <Text color="red">Verification errors:</Text>
-          {verifyResult.errors.map((error) => (
-            <Text key={error} color="red" dimColor>  - {error}</Text>
-          ))}
+        <Box paddingBottom={1}>
+          <SectionCard title="Verification errors">
+            {verifyResult.errors.map((error) => (
+              <Text key={error} color="red">- {error}</Text>
+            ))}
+          </SectionCard>
         </Box>
       )}
-      
-      <Box paddingTop={2}>
-        <Text>Next step: Run </Text>
-        <Text bold>'opencode --version'</Text>
-        <Text> to verify</Text>
-      </Box>
-    </Box>
+    </ScreenLayout>
   );
 }

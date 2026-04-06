@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text, useInput } from 'ink';
 import type { ConfigFile } from '../types/index.js';
+import { KeyHints, ScreenLayout, SectionCard } from './components/primitives.js';
 
 interface DifferencesScreenProps {
   frameworkName: string;
@@ -16,24 +17,20 @@ export function DifferencesScreen({ frameworkName, conflicts, onBack }: Differen
   });
 
   return (
-    <Box flexDirection="column" padding={1}>
-      <Box paddingBottom={1}>
-        <Text bold color="yellow">Detected differences</Text>
-      </Box>
-
-      <Text>The following items differ from the selected framework: {frameworkName}</Text>
-
-      <Box flexDirection="column" paddingTop={1} paddingLeft={2}>
+    <ScreenLayout
+      title="Detected differences"
+      step="Detailed inspection"
+      subtitle={`These managed entries differ from the selected framework: ${frameworkName}.`}
+      footer={<KeyHints hints={[{ keyLabel: 'Enter/Esc', description: 'go back' }]} />}
+    >
+      <SectionCard title="Managed entries">
         {conflicts.map((file) => (
-          <Text key={file.path}>
-            - {file.path} ({file.status})
-          </Text>
+          <Box key={file.path}>
+            <Text>{file.path}</Text>
+            <Text dimColor>{` (${file.status})`}</Text>
+          </Box>
         ))}
-      </Box>
-
-      <Box paddingTop={1}>
-        <Text dimColor>Press Enter or Esc to go back.</Text>
-      </Box>
-    </Box>
+      </SectionCard>
+    </ScreenLayout>
   );
 }

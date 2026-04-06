@@ -2,6 +2,13 @@ import { Text, Box, useInput } from 'ink';
 import Spinner from 'ink-spinner';
 import React from 'react';
 import type { CheckResult, OpenCodeStatus, SystemInfo } from '../types/index.js';
+import {
+  KeyHints,
+  LabeledValue,
+  ScreenLayout,
+  SectionCard,
+} from './components/primitives.js';
+import { uiColors } from './components/theme.js';
 
 interface SystemCheckScreenProps {
   checks: CheckResult[];
@@ -9,6 +16,7 @@ interface SystemCheckScreenProps {
   openCodeStatus: OpenCodeStatus | null;
   isChecking: boolean;
   onComplete: () => void;
+  onExit: () => void;
 }
 
 function formatOsLabel(os?: SystemInfo['os'] | null): string {
@@ -32,49 +40,88 @@ export function SystemCheckScreen({
   openCodeStatus,
   isChecking,
   onComplete,
+  onExit,
 }: SystemCheckScreenProps) {
   useInput((_input, key) => {
+    if (!isChecking && key.escape) {
+      onExit();
+      return;
+    }
+
     if (!isChecking && key.return) {
       onComplete();
     }
   });
-  
-  return (
-    <Box flexDirection="column" padding={1}>
-      <Box paddingBottom={1}>
-        <Text bold>System Check</Text>
-      </Box>
 
-      {isChecking && (
+  const checkTone = (status: CheckResult['status']) =>
+    status === 'pass' ? 'success' : status === 'warn' ? 'warning' : 'danger';
+
+  return (
+    <ScreenLayout
+      title="System check"
+      step="Environment validation"
+      subtitle="Verify local prerequisites before touching the managed OpenCode configuration."
+      footer={
+        !isChecking ? (
+          <KeyHints hints={[{ keyLabel: 'Enter', description: 'continue' }, { keyLabel: 'Esc', description: 'exit' }]} />
+        ) : undefined
+      }
+    >
+      {isChecking ? (
         <Box paddingTop={1}>
-          <Text><Spinner />{' '}Checking system...</Text>
+          <Text color={uiColors.accent}>
+            <Spinner type="dots" /> Checking system, runtime, and OpenCode availability...
+          </Text>
         </Box>
-      )}
+      ) : null}
 
       {!isChecking && systemInfo && (
         <Box flexDirection="column">
-          <Box flexDirection="column" paddingBottom={1}>
-            <Text bold>Environment</Text>
-            <Text dimColor>OS: {formatOsLabel(systemInfo.os)}</Text>
-            <Text dimColor>Shell: {systemInfo.shell}</Text>
-            <Text dimColor>Node.js: {systemInfo.nodeVersion || 'Not installed'}</Text>
-            <Text dimColor>npm: {systemInfo.npmVersion || 'Not installed'}</Text>
-            <Text dimColor>Git: {systemInfo.gitVersion || 'Not installed'}</Text>
-            <Text dimColor>Homebrew: {systemInfo.homebrewInstalled ? 'Installed' : 'Not installed'}</Text>
-          </Box>
-
-          <Box flexDirection="column" paddingBottom={1}>
-            <Text bold>OpenCode</Text>
-            <Text dimColor>Status: {openCodeStatus?.installed ? 'Installed' : 'Not installed'}</Text>
-            <Text dimColor>Version: {openCodeStatus?.version || 'Not available'}</Text>
-            <Text dimColor>Path: {openCodeStatus?.path || 'Not available'}</Text>
-          </Box>
+          <SectionCard title="Environment and OpenCode" titleTone="accent">
+            <Box flexDirection="row" justifyContent="space-between">
+              <Box flexDirection="column" marginRight={4}>
+                <LabeledValue label="OS" value={formatOsLabel(systemInfo.os)} />
+                <LabeledValue label="Shell" value={systemInfo.shell} />
+                <LabeledValue label="Node.js" value={systemInfo.nodeVersion || 'Not installed'} />
+                <LabeledValue label="npm" value={systemInfo.npmVersion || 'Not installed'} />
+                <LabeledValue
+                  label="Git"
+                  value={systemInfo.gitVersion || 'Not installed'}
+                />
+                <LabeledValue
+                  label="Homebrew"
+                  value={systemInfo.homebrewInstalled ? 'Installed' : 'Not installed'}
+                  tone={systemInfo.homebrewInstalled ? 'info' : undefined}
+                />
+              </Box>
+              <Box flexDirection="column">
+                <LabeledValue
+                  label="OpenCode"
+                  value={openCodeStatus?.installed ? 'Installed' : 'Not installed'}
+                  tone={openCodeStatus?.installed ? 'info' : 'warning'}
+                />
+                <LabeledValue label="Version" value={openCodeStatus?.version || 'Not available'} />
+                <LabeledValue label="Path" value={openCodeStatus?.path || 'Not available'} />
+              </Box>
+            </Box>
+          </SectionCard>
 
           <Box paddingTop={1}>
-            <Text color="cyan"><Spinner /> Press Enter to continue.</Text>
+            <SectionCard title="Checks" titleTone="accent">
+            {checks.map((check) => (
+              <Box key={check.name}>
+                <Text color={check.status === 'pass' ? uiColors.accent : checkTone(check.status)}>
+                  {check.status === 'pass' ? '✓' : check.status === 'warn' ? '!' : 'x'}
+                </Text>
+                <Text> {check.name}</Text>
+                <Text dimColor>{check.version ? ` · ${check.version}` : ''}</Text>
+                <Text dimColor>{check.message ? ` · ${check.message}` : ''}</Text>
+              </Box>
+            ))}
+            </SectionCard>
           </Box>
         </Box>
       )}
-    </Box>
+    </ScreenLayout>
   );
 }

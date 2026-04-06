@@ -1,16 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { MANAGED_CONFIG_ENTRIES } from '../utils/managed-config.js';
+import { REQUIRED_FRAMEWORK_ENTRIES } from '../utils/managed-config.js';
 import { getFrameworksRootDir } from '../utils/paths.js';
 import type { FrameworkDefinition } from '../types/index.js';
-
-function toDisplayName(id: string): string {
-  return id
-    .split(/[-_]/g)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
 
 async function pathExists(targetPath: string): Promise<boolean> {
   try {
@@ -22,7 +14,7 @@ async function pathExists(targetPath: string): Promise<boolean> {
 }
 
 async function isValidFrameworkDirectory(frameworkPath: string): Promise<boolean> {
-  for (const entry of MANAGED_CONFIG_ENTRIES) {
+  for (const entry of REQUIRED_FRAMEWORK_ENTRIES) {
     if (!(await pathExists(path.join(frameworkPath, entry)))) {
       return false;
     }
@@ -48,21 +40,13 @@ export async function listFrameworks(): Promise<FrameworkDefinition[]> {
 
     frameworks.push({
       id: entry.name,
-      name: toDisplayName(entry.name),
+      name: entry.name,
       path: frameworkPath,
       readmePath: path.join(frameworkPath, 'README.md'),
     });
   }
 
   frameworks.sort((a, b) => {
-    if (a.id === 'default') {
-      return -1;
-    }
-
-    if (b.id === 'default') {
-      return 1;
-    }
-
     return a.name.localeCompare(b.name);
   });
 

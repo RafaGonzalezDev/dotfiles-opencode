@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { VerifyResult } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
+import { MANAGED_CONFIG_DIRECTORIES, REQUIRED_FRAMEWORK_FILES } from '../utils/managed-config.js';
 
 const CONFIG_DIR = getConfigDir();
 
@@ -18,44 +19,34 @@ export async function verifyInstallation(): Promise<VerifyResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
   
-  // Check opencode.json exists and is valid JSON
-  const opencodeJsonPath = path.join(CONFIG_DIR, 'opencode.json');
-  if (await fileExists(opencodeJsonPath)) {
-    try {
-      const content = await fs.promises.readFile(opencodeJsonPath, 'utf-8');
-      JSON.parse(content);
-    } catch {
-      errors.push('opencode.json is not valid JSON');
+  for (const file of REQUIRED_FRAMEWORK_FILES) {
+    const filePath = path.join(CONFIG_DIR, file);
+    if (!(await fileExists(filePath))) {
+      errors.push(`${file} is missing`);
+      continue;
     }
-  } else {
-    errors.push('opencode.json is missing');
-  }
-  
-  // Check AGENTS.md exists
-  const agentsMdPath = path.join(CONFIG_DIR, 'AGENTS.md');
-  if (!(await fileExists(agentsMdPath))) {
-    errors.push('AGENTS.md is missing');
-  }
-  
-  // Check agents directory
-  const agentsDir = path.join(CONFIG_DIR, 'agents');
-  if (!(await fileExists(agentsDir))) {
-    errors.push('agents/ directory is missing');
-  } else {
-    const agentsFiles = await fs.promises.readdir(agentsDir);
-    if (agentsFiles.length === 0) {
-      warnings.push('agents/ directory is empty');
+
+    if (file === 'opencode.json') {
+      try {
+        const content = await fs.promises.readFile(filePath, 'utf-8');
+        JSON.parse(content);
+      } catch {
+        errors.push('opencode.json is not valid JSON');
+      }
     }
   }
-  
-  // Check skills directory
-  const skillsDir = path.join(CONFIG_DIR, 'skills');
-  if (!(await fileExists(skillsDir))) {
-    errors.push('skills/ directory is missing');
-  } else {
-    const skillsFiles = await fs.promises.readdir(skillsDir);
-    if (skillsFiles.length === 0) {
-      warnings.push('skills/ directory is empty');
+
+  for (const directory of MANAGED_CONFIG_DIRECTORIES) {
+    const directoryPath = path.join(CONFIG_DIR, directory);
+
+    if (!(await fileExists(directoryPath))) {
+      errors.push(`${directory}/ directory is missing`);
+      continue;
+    }
+
+    const directoryEntries = await fs.promises.readdir(directoryPath);
+    if (directoryEntries.length === 0) {
+      warnings.push(`${directory}/ directory is empty`);
     }
   }
   
