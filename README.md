@@ -6,14 +6,14 @@
 
 > Interactive setup for sharing an OpenCode configuration across a team.
 
-This repository packages a reusable OpenCode configuration and an interactive CLI that helps install, update, back up, and restore that configuration safely.
+This repository packages one or more reusable OpenCode frameworks and an interactive CLI that helps install, switch, back up, and restore them safely.
 
 ## What this repo gives you
 
 - A guided CLI setup flow for installing or updating the configuration
 - Automatic safety backups before any managed configuration is overwritten
 - Backup restore from the 5 most recent backups
-- A reusable `opencode/` directory with agents, skills, and shared config
+- A versioned `frameworks/` catalog with agents, skills, and shared config
 
 ## Quick start
 
@@ -38,8 +38,8 @@ The installer will:
 2. Detect whether OpenCode is already installed
 3. Offer Homebrew or npm installation when needed
 4. Detect an existing OpenCode configuration
-5. Create a safety backup before importing managed files
-6. Import the managed configuration
+5. Create a safety backup before cleaning managed files
+6. Remove previously managed files and import the selected framework
 7. Verify the result
 
 ### Managed files
@@ -51,7 +51,7 @@ The installer manages only these entries inside `~/.config/opencode/`:
 - `agents/`
 - `skills/`
 
-Backups and restores are limited to that same set.
+Backups and restores are limited to that same set, and backups include metadata about the active framework when available.
 
 ### Useful flags
 
@@ -62,15 +62,15 @@ Backups and restores are limited to that same set.
 
 ## Repository layout
 
-- [`opencode/`](/Users/rafa/workspace/personal/dotfiles-opencode/opencode) contains the shared OpenCode configuration
+- [`frameworks/`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks) contains the installable OpenCode frameworks
 - [`cli/`](/Users/rafa/workspace/personal/dotfiles-opencode/cli) contains the interactive installer
-- [`opencode/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/opencode/README.md) explains the framework itself
+- [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md) explains the default framework
 
 ## Framework documentation
 
 If you want to understand how the agentic workflow is organized, how the agents are split, and what the configuration inside `opencode/` is doing, see:
 
-- [`opencode/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/opencode/README.md)
+- [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md)
 
 ## Manual installation
 
