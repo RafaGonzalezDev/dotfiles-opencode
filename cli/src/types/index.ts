@@ -23,6 +23,13 @@ export interface OpenCodeStatus {
   path: string | null;
 }
 
+export interface FrameworkDefinition {
+  id: string;
+  name: string;
+  path: string;
+  readmePath?: string;
+}
+
 export interface ConfigFile {
   path: string;
   status: 'new' | 'different' | 'identical' | 'missing';
@@ -32,13 +39,22 @@ export interface ConfigFile {
 
 export interface ConfigDetectionResult {
   configDirExists: boolean;
+  frameworkId: string;
   files: ConfigFile[];
+}
+
+export interface BackupManifest {
+  version: 1;
+  createdAt: string;
+  frameworkId: string | null;
+  entries: string[];
 }
 
 export interface BackupResult {
   success: boolean;
   backupPath: string | null;
   filesBackedUp: number;
+  frameworkId?: string | null;
   error?: string;
 }
 
@@ -47,12 +63,14 @@ export interface BackupEntry {
   path: string;
   createdAt: string;
   filesBackedUp: number;
+  frameworkId?: string | null;
 }
 
 export interface InstallResult {
   status: 'success' | 'partial' | 'failed';
   success: boolean;
   filesInstalled: number;
+  frameworkId?: string;
   errors: string[];
 }
 
