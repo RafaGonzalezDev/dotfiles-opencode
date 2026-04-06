@@ -1,5 +1,5 @@
 ---
-description: Read-only code review focused on architecture, SOLID principles, security, and maintainability
+description: Read-only code review focused on correctness, security, maintainability, and design quality
 mode: subagent
 permission:
   edit: deny
@@ -154,8 +154,8 @@ Evaluate the code against the following, in order of priority:
 - **Correctness**: logic errors, edge cases, unhandled states.
 - **Security**: input validation, exposure of sensitive data, injection risks,
   improper authentication or authorization.
-- **SOLID principles**: identify violations by name and explain the impact.
-- **DRY**: flag duplication, including subtle or cross-module repetition.
+- **Design quality**: identify structural issues, including SOLID or DRY
+  problems when they materially affect the code.
 - **Maintainability**: naming clarity, separation of concerns, cohesion,
   coupling, and testability.
 - **Architecture**: boundary violations, inappropriate dependencies, structural
@@ -163,21 +163,15 @@ Evaluate the code against the following, in order of priority:
 
 ## Skills
 
-- @solid-review — use as the basis for the SOLID / DRY violations section.
+- @solid-review — use as the basis for the design quality section whenever
+  SOLID or DRY issues are present.
   Invoke it before producing any SOLID assessment to ensure consistent,
   principled analysis grounded in the skill's criteria.
-- @accessibility — use when reviewing frontend components. Apply the skill's
-  review checklist to assess WCAG 2.1 AA compliance (contrast, keyboard
-  navigation, ARIA, focus management).
-- @ui-architecture — use when reviewing UI structure. Apply the skill's review
-  checklist to evaluate component boundaries, state ownership, and hierarchy.
-- @ux-patterns — use when reviewing interactive behavior. Apply the skill's
-  review checklist to assess forms, navigation, loading, error, and empty states.
 
 ## Output format
 
 - Summary (1–2 lines: overall assessment).
 - Issues (bullets: severity — Critical / Major / Minor — file path, line
   reference if available, and concrete description).
-- SOLID / DRY violations (bullets: principle name, file path, explanation).
+- Design quality findings (bullets: principle or concern, file path, explanation).
 - Recommendations (max 5 bullets: specific, actionable, prioritized).
