@@ -1,0 +1,12 @@
+{
+  "name": "dotfiles-opencode",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm --prefix cli install",
+    "build": "npm --prefix cli --silent run build",
+    "start": "node cli/dist/index.js",
+    "dev": "npm --prefix cli --silent run build && node cli/dist/index.js",
+    "setup": "npm --prefix cli --silent run build && node cli/dist/index.js",
+    "cli:install": "npm --prefix cli install"
+  }
+}
