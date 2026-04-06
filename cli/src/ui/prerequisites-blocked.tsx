@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import type { CheckResult } from '../types/index.js';
+import { ScreenLayout, SectionCard, StatusBanner } from './components/primitives.js';
 
 interface PrerequisitesBlockedScreenProps {
   failures: CheckResult[];
@@ -23,25 +24,23 @@ export function PrerequisitesBlockedScreen({
   failures,
 }: PrerequisitesBlockedScreenProps) {
   return (
-    <Box flexDirection="column" padding={1}>
+    <ScreenLayout
+      title="Missing required prerequisites"
+      step="Blocked before install"
+      subtitle="The setup cannot proceed until the missing requirements below are resolved."
+    >
       <Box paddingBottom={1}>
-        <Text bold color="red">Missing required prerequisites</Text>
+        <StatusBanner tone="danger">The environment is incomplete. Fix the blocking prerequisites and rerun the setup.</StatusBanner>
       </Box>
 
-      <Text>The setup cannot continue until these issues are fixed:</Text>
-
-      <Box flexDirection="column" paddingTop={1}>
+      <SectionCard title="Blocking issues">
         {failures.map((failure) => (
           <Box key={failure.name} flexDirection="column" paddingBottom={1}>
-            <Text color="red">- {failure.name}: {failure.message}</Text>
-            <Text dimColor>  {getSuggestion(failure)}</Text>
+            <Text color="red">[{failure.name}] {failure.message}</Text>
+            <Text dimColor>{getSuggestion(failure)}</Text>
           </Box>
         ))}
-      </Box>
-
-      <Box paddingTop={1}>
-        <Text dimColor>After fixing them, run the installer again.</Text>
-      </Box>
-    </Box>
+      </SectionCard>
+    </ScreenLayout>
   );
 }

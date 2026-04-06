@@ -22,6 +22,7 @@ import { InstallConfirmationScreen } from './ui/install-confirmation.js';
 import { FrameworkSelectionScreen } from './ui/framework-selection.js';
 import { installHomebrew } from './installers/homebrew.js';
 import { getOpenCodeInstallCommand, installOpenCode } from './installers/opencode.js';
+import { MANAGED_CONFIG_ENTRIES } from './utils/managed-config.js';
 import type {
   BackupEntry,
   BackupResult,
@@ -170,7 +171,8 @@ export function App({ flags }: AppProps) {
       }
 
       const initialFramework =
-        availableFrameworks.find((framework) => framework.id === 'default') || availableFrameworks[0];
+        availableFrameworks.find((framework) => framework.id === 'default') ||
+        availableFrameworks[0];
 
       setSelectedFramework(initialFramework);
 
@@ -397,15 +399,13 @@ export function App({ flags }: AppProps) {
         `\n[Dry run] Would install framework: ${selectedFramework.name} (${selectedFramework.id})`
       );
       console.log('[Dry run] Managed entries would be removed before reinstalling:');
-      console.log('  - opencode.json');
-      console.log('  - AGENTS.md');
-      console.log('  - agents/');
-      console.log('  - skills/');
+      for (const entry of MANAGED_CONFIG_ENTRIES) {
+        console.log(`  - ${entry}${entry === 'agents' || entry === 'skills' ? '/' : ''}`);
+      }
       console.log('[Dry run] Managed entries would then be copied from the selected framework:');
-      console.log('  - opencode.json');
-      console.log('  - AGENTS.md');
-      console.log('  - agents/');
-      console.log('  - skills/');
+      for (const entry of MANAGED_CONFIG_ENTRIES) {
+        console.log(`  - ${entry}${entry === 'agents' || entry === 'skills' ? '/' : ''}`);
+      }
       setPhase('summary');
       setInstallResult({
         status: 'success',
@@ -499,6 +499,7 @@ export function App({ flags }: AppProps) {
           openCodeStatus={openCodeStatus}
           isChecking={isChecking}
           onComplete={handleSystemCheckComplete}
+          onExit={handleExit}
         />
       );
 
@@ -514,6 +515,7 @@ export function App({ flags }: AppProps) {
           onSelectHomebrew={() => void handleHomebrewInstall()}
           onSelectNpm={() => void handleNpmInstall()}
           onManualInstall={handleManualInstall}
+          onBack={() => setPhase('welcome')}
         />
       );
 
@@ -537,9 +539,9 @@ export function App({ flags }: AppProps) {
 
     case 'opencode-check':
       return (
-        <Box>
+        <Box paddingTop={1}>
           <Text>
-            <Spinner /> Checking OpenCode installation...
+            <Spinner type="dots" /> Checking OpenCode installation...
           </Text>
         </Box>
       );

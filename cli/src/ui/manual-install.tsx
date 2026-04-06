@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Text, useInput } from 'ink';
+import { KeyHints, ScreenLayout, SectionCard, StatusBanner } from './components/primitives.js';
 
 interface ManualInstallScreenProps {
   command: string;
@@ -21,18 +22,25 @@ export function ManualInstallScreen({
   });
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <ScreenLayout
+      title="Manual OpenCode installation"
+      step="Manual install fallback"
+      subtitle="Run the command below in a separate terminal, then return here to verify the installation."
+      footer={
+        <KeyHints
+          hints={[
+            { keyLabel: 'Enter', description: 'verify again' },
+            { keyLabel: 'Esc', description: 'go back' },
+          ]}
+        />
+      }
+    >
       <Box paddingBottom={1}>
-        <Text bold color="yellow">Manual OpenCode installation</Text>
+        <StatusBanner tone="warning">This path is intended for manual or restricted environments.</StatusBanner>
       </Box>
-
-      <Text>Run this command in another terminal:</Text>
-      <Box paddingTop={1} paddingBottom={1}>
+      <SectionCard title="Command">
         <Text color="cyan">{command}</Text>
-      </Box>
-
-      <Text dimColor>Press Enter after installation to verify OpenCode again.</Text>
-      <Text dimColor>Press Esc to go back and choose another method.</Text>
-    </Box>
+      </SectionCard>
+    </ScreenLayout>
   );
 }

@@ -1,7 +1,13 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import SelectInput from 'ink-select-input';
 import type { ConfigFile } from '../types/index.js';
+import { MenuList } from './components/menu-list.js';
+import {
+  KeyHints,
+  ScreenLayout,
+  SectionCard,
+} from './components/primitives.js';
+import { uiColors } from './components/theme.js';
 
 interface InstallConfirmationScreenProps {
   frameworkName: string;
@@ -36,59 +42,47 @@ export function InstallConfirmationScreen({
     : 'No backup is needed because no previous configuration was found.';
 
   const items = [
-    { label: hasChanges ? 'Continue' : 'Reinstall anyway', value: 'continue' },
-    { label: 'Restore a recent backup', value: 'restore' },
-    { label: 'Cancel installation', value: 'cancel' },
+    { type: 'action' as const, key: 'continue', label: hasChanges ? 'Continue' : 'Reinstall anyway', value: 'continue' },
+    { type: 'action' as const, key: 'restore', label: 'Restore a recent backup', value: 'restore', tone: 'secondary' as const },
   ];
 
   return (
-    <Box flexDirection="column" padding={1}>
-      <Box paddingBottom={1}>
-        <Text bold color="cyan">Ready to import configuration</Text>
-      </Box>
-
-      <Box paddingBottom={1}>
-        <Text>Selected framework: {frameworkName}</Text>
-      </Box>
-
-      {backupNotice && (
-        <Box paddingBottom={1}>
-          <Text color="cyan">{backupNotice}</Text>
-        </Box>
-      )}
-
-      {restoreNotice && (
-        <Box paddingBottom={1}>
-          <Text color={restoreNotice.toLowerCase().includes('failed') ? 'red' : 'green'}>
-            {restoreNotice}
+    <ScreenLayout
+      title="Ready to import configuration"
+      step="Final confirmation"
+      subtitle={heading}
+      context={
+        <Box flexDirection="column">
+          <Text>
+            <Text color={uiColors.accent}>{frameworkName}</Text>
+            <Text dimColor> - {backupMessage}</Text>
           </Text>
+          {restoreNotice && (
+            <Text color={restoreNotice.toLowerCase().includes('failed') ? 'red' : uiColors.accent}>
+              {restoreNotice}
+            </Text>
+          )}
         </Box>
-      )}
-
-      <Box paddingBottom={1}>
-        <Text>{heading}</Text>
-      </Box>
-
-      <Box paddingBottom={1}>
-        <Text dimColor>{backupMessage}</Text>
-      </Box>
-
-      <SelectInput
-        items={items}
-        onSelect={(item) => {
-          switch (item.value) {
-            case 'continue':
-              onContinueInstall();
-              break;
-            case 'restore':
-              onShowRecentBackups();
-              break;
-            case 'cancel':
-              onCancel();
-              break;
-          }
-        }}
-      />
-    </Box>
+      }
+      footer={<KeyHints hints={[{ keyLabel: '↑/↓', description: 'move' }, { keyLabel: 'Enter', description: 'select' }, { keyLabel: 'Esc', description: 'cancel' }]} />}
+    >
+      <SectionCard title="Decision">
+        <MenuList
+          items={items}
+          onEscape={onCancel}
+          onSelect={(value) => {
+            switch (value) {
+              case 'continue':
+                onContinueInstall();
+                break;
+              case 'restore':
+                onShowRecentBackups();
+                break;
+            }
+          }}
+          initialValue="continue"
+        />
+      </SectionCard>
+    </ScreenLayout>
   );
 }

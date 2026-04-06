@@ -1,6 +1,7 @@
-import { Text, Box } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
-import SelectInput from 'ink-select-input';
+import { MenuList } from './components/menu-list.js';
+import { KeyHints, ScreenLayout, SectionCard, StatusBanner } from './components/primitives.js';
 
 interface WelcomeScreenProps {
   message?: string | null;
@@ -16,49 +17,50 @@ export function WelcomeScreen({
   onExit,
 }: WelcomeScreenProps) {
   const items = [
-    { label: 'Install or update configuration', value: 'install' },
-    { label: 'Restore from backup', value: 'restore' },
-    { label: 'Exit', value: 'exit' },
+    { type: 'action' as const, key: 'install', label: 'Install or update configuration', value: 'install' },
+    { type: 'action' as const, key: 'restore', label: 'Restore from backup', value: 'restore', tone: 'secondary' as const },
   ];
 
   return (
-    <Box flexDirection="column" padding={1}>
-      <Box paddingBottom={1}>
-        <Text bold color="cyan">OpenCode Setup</Text>
-      </Box>
-
-      {message && (
-        <Box paddingBottom={1}>
-          <Text color={message.toLowerCase().includes('failed') ? 'red' : 'green'}>
-            {message}
-          </Text>
+    <ScreenLayout
+      title="OpenCode Setup"
+      step="Setup entrypoint"
+      subtitle="Prepare, switch, or restore a managed OpenCode configuration."
+      context={
+        <Box flexDirection="column">
+          {message && (
+            <Box paddingBottom={1}>
+              <StatusBanner tone={message.toLowerCase().includes('failed') ? 'danger' : 'success'}>
+                {message}
+              </StatusBanner>
+            </Box>
+          )}
+          <SectionCard title="Target location">
+            <Text dimColor>Managed configuration will be applied globally.</Text>
+            <Text color="cyan">~/.config/opencode/</Text>
+          </SectionCard>
         </Box>
-      )}
-
-      <Text>Welcome! This tool will help you configure your OpenCode environment.</Text>
-      <Box paddingTop={1}>
-        <Text dimColor>Note: This installation will configure OpenCode globally at:</Text>
-      </Box>
-      <Text dimColor>  ~/.config/opencode/</Text>
-
-      <Box paddingTop={2}>
-        <SelectInput
+      }
+      footer={
+        <KeyHints hints={[{ keyLabel: '↑/↓', description: 'move' }, { keyLabel: 'Enter', description: 'select' }, { keyLabel: 'Esc', description: 'exit' }]} />
+      }
+    >
+      <SectionCard title="Available actions">
+        <MenuList
           items={items}
-          onSelect={(item) => {
-            switch (item.value) {
+          onEscape={onExit}
+          onSelect={(value) => {
+            switch (value) {
               case 'install':
                 onStartSetup();
                 break;
               case 'restore':
                 onRestoreBackups();
                 break;
-              case 'exit':
-                onExit();
-                break;
             }
           }}
         />
-      </Box>
-    </Box>
+      </SectionCard>
+    </ScreenLayout>
   );
 }
