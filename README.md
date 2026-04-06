@@ -46,10 +46,10 @@ The installer will:
 
 The installer manages only these entries inside `~/.config/opencode/`:
 
-- `opencode.json`
 - `AGENTS.md`
 - `agents/`
 - `skills/`
+- `opencode.json`
 
 Backups and restores are limited to that same set, and backups include metadata about the active framework when available.
 
@@ -64,13 +64,15 @@ Backups and restores are limited to that same set, and backups include metadata 
 
 - [`frameworks/`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks) contains the installable OpenCode frameworks
 - [`cli/`](/Users/rafa/workspace/personal/dotfiles-opencode/cli) contains the interactive installer
-- [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md) explains the default framework
+- [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md) explains the minimal default framework
+- [`frameworks/custom-build/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/custom-build/README.md) explains the custom-build framework
 
 ## Framework documentation
 
 If you want to understand how the agentic workflow is organized, how the agents are split, and what the configuration inside `opencode/` is doing, see:
 
 - [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md)
+- [`frameworks/custom-build/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/custom-build/README.md)
 
 ## Manual installation
 

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { InstallResult } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
-import { MANAGED_CONFIG_ENTRIES } from '../utils/managed-config.js';
+import { MANAGED_CONFIG_ENTRIES, REQUIRED_FRAMEWORK_ENTRIES } from '../utils/managed-config.js';
 import { getFrameworkSourceDir } from '../frameworks/index.js';
 
 const CONFIG_DIR = getConfigDir();
@@ -48,7 +48,7 @@ async function copyPath(src: string, dest: string): Promise<{ copied: number; er
 async function validateFrameworkEntries(frameworkDir: string): Promise<string[]> {
   const errors: string[] = [];
 
-  for (const entry of MANAGED_CONFIG_ENTRIES) {
+  for (const entry of REQUIRED_FRAMEWORK_ENTRIES) {
     const sourcePath = path.join(frameworkDir, entry);
 
     try {
@@ -118,6 +118,12 @@ export async function installConfig(frameworkId: string): Promise<InstallResult>
   for (const entry of MANAGED_CONFIG_ENTRIES) {
     const srcPath = path.join(frameworkDir, entry);
     const destPath = path.join(CONFIG_DIR, entry);
+
+    try {
+      await fs.promises.access(srcPath);
+    } catch {
+      continue;
+    }
 
     const result = await copyPath(srcPath, destPath);
     copied += result.copied;
