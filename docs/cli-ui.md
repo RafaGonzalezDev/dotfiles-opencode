@@ -47,3 +47,23 @@ Instead, it presents a concise operational summary:
 
 Detailed per-entry inspection remains available through the explicit
 `View differences` action.
+
+## Optional OpenCode update flow
+
+When the CLI detects an existing OpenCode installation managed by Homebrew or
+npm, it now pauses before framework selection and asks the user whether they
+want to update the runtime first.
+
+### Supported update paths
+
+- Homebrew: `brew update` and `brew upgrade opencode`
+- npm: `npm install -g opencode-ai`
+
+### Why
+
+Updating the runtime is operationally different from installing a framework.
+Keeping that decision explicit avoids surprising side effects and lets the user:
+
+- update OpenCode without changing the managed framework files
+- continue without updating
+- skip framework installation entirely after the runtime decision
