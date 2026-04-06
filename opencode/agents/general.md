@@ -145,16 +145,8 @@ discovery pass via the orchestrator before acting.
   decision. Create the ADR in docs/adr/ before or alongside the implementation.
 - @docs-structure — use when creating or updating any file in docs/. Determines
   the correct placement, filename, and format for each document type.
-- @frontend-design — use when implementing UI components, pages, or visual
-  interfaces. Commit to an aesthetic direction and apply implementation rules
-  before writing any frontend code with design requirements.
-- @ux-patterns — use when implementing interactive components: forms, navigation,
-  loading states, error handling, empty states, or onboarding flows.
-- @accessibility — use when implementing any frontend component. Apply WCAG 2.1
-  AA criteria during implementation, not as a post-hoc check.
-- @ui-architecture — use when designing or implementing UI component hierarchies,
-  deciding where state lives, or structuring feature folders.
-- @jira-ticket — use when turning a request, bug report, feature idea, or technical need into a well-structured Jira ticket with clear summary, description, acceptance criteria, and suggested metadata.
+- @solid-review — use when a change has non-trivial structural impact and you
+  want a fast self-check against reusable design quality criteria.
 
 ## Output format
 
