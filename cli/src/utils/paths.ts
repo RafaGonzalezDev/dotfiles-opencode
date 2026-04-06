@@ -20,11 +20,11 @@ export function getConfigDir(): string {
   return path.join(getHomeDir(), '.config', 'opencode');
 }
 
-export function getOpencodeSourceDir(): string {
+export function getFrameworksRootDir(): string {
   const moduleDir = getModuleDir();
   const candidates = [
-    path.resolve(moduleDir, '..', 'assets', 'opencode'),
-    path.resolve(moduleDir, '..', '..', '..', 'opencode'),
+    path.resolve(moduleDir, '..', 'assets', 'frameworks'),
+    path.resolve(moduleDir, '..', '..', '..', 'frameworks'),
   ];
 
   for (const candidate of candidates) {
@@ -34,6 +34,6 @@ export function getOpencodeSourceDir(): string {
   }
 
   throw new Error(
-    `OpenCode assets directory not found. Expected one of: ${candidates.join(', ')}`
+    `Framework assets directory not found. Expected one of: ${candidates.join(', ')}`
   );
 }

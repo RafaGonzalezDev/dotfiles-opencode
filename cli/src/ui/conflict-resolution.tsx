@@ -4,6 +4,7 @@ import SelectInput from 'ink-select-input';
 import type { ConfigFile } from '../types/index.js';
 
 interface ConflictResolutionScreenProps {
+  frameworkName: string;
   conflicts: ConfigFile[];
   backupNotice?: string | null;
   restoreNotice?: string | null;
@@ -14,6 +15,7 @@ interface ConflictResolutionScreenProps {
 }
 
 export function ConflictResolutionScreen({
+  frameworkName,
   conflicts,
   backupNotice,
   restoreNotice,
@@ -52,6 +54,10 @@ export function ConflictResolutionScreen({
         <Text bold color="yellow">Existing configuration detected</Text>
       </Box>
 
+      <Box paddingBottom={1}>
+        <Text>Selected framework: {frameworkName}</Text>
+      </Box>
+
       {backupNotice && (
         <Box paddingBottom={1}>
           <Text color="cyan">{backupNotice}</Text>
@@ -67,7 +73,7 @@ export function ConflictResolutionScreen({
       )}
       
       <Box paddingBottom={1}>
-        <Text>The following files differ from your repository:</Text>
+        <Text>The following files differ from the selected framework:</Text>
       </Box>
       
       <Box flexDirection="column" paddingLeft={2} paddingBottom={1}>

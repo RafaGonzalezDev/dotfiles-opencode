@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { InstallResult } from '../types/index.js';
-import { getConfigDir, getOpencodeSourceDir } from '../utils/paths.js';
+import { getConfigDir } from '../utils/paths.js';
 import { MANAGED_CONFIG_ENTRIES } from '../utils/managed-config.js';
+import { getFrameworkSourceDir } from '../frameworks/index.js';
 
 const CONFIG_DIR = getConfigDir();
-const REPO_CONFIG_DIR = getOpencodeSourceDir();
 
 async function copyPath(src: string, dest: string): Promise<{ copied: number; errors: string[] }> {
   let copied = 0;
@@ -45,7 +45,36 @@ async function copyPath(src: string, dest: string): Promise<{ copied: number; er
   return { copied, errors };
 }
 
-export async function installConfig(): Promise<InstallResult> {
+async function validateFrameworkEntries(frameworkDir: string): Promise<string[]> {
+  const errors: string[] = [];
+
+  for (const entry of MANAGED_CONFIG_ENTRIES) {
+    const sourcePath = path.join(frameworkDir, entry);
+
+    try {
+      await fs.promises.access(sourcePath);
+    } catch {
+      errors.push(`Missing required framework entry: ${sourcePath}`);
+    }
+  }
+
+  return errors;
+}
+
+export async function installConfig(frameworkId: string): Promise<InstallResult> {
+  const frameworkDir = await getFrameworkSourceDir(frameworkId);
+  const validationErrors = await validateFrameworkEntries(frameworkDir);
+
+  if (validationErrors.length > 0) {
+    return {
+      status: 'failed',
+      success: false,
+      filesInstalled: 0,
+      frameworkId,
+      errors: validationErrors,
+    };
+  }
+
   try {
     await fs.promises.mkdir(CONFIG_DIR, { recursive: true });
   } catch (err) {
@@ -53,6 +82,7 @@ export async function installConfig(): Promise<InstallResult> {
       status: 'failed',
       success: false,
       filesInstalled: 0,
+      frameworkId,
       errors: [
         `Failed to create config directory: ${err instanceof Error ? err.message : 'Unknown error'}`,
       ],
@@ -63,15 +93,31 @@ export async function installConfig(): Promise<InstallResult> {
   const errors: string[] = [];
 
   for (const entry of MANAGED_CONFIG_ENTRIES) {
-    const srcPath = path.join(REPO_CONFIG_DIR, entry);
-    const destPath = path.join(CONFIG_DIR, entry);
-
     try {
-      await fs.promises.access(srcPath);
-    } catch {
-      errors.push(`Missing required source entry: ${srcPath}`);
-      continue;
+      await fs.promises.rm(path.join(CONFIG_DIR, entry), {
+        recursive: true,
+        force: true,
+      });
+    } catch (err) {
+      errors.push(
+        `Failed to remove existing ${entry}: ${err instanceof Error ? err.message : 'Unknown error'}`
+      );
     }
+  }
+
+  if (errors.length > 0) {
+    return {
+      status: 'failed',
+      success: false,
+      filesInstalled: 0,
+      frameworkId,
+      errors,
+    };
+  }
+
+  for (const entry of MANAGED_CONFIG_ENTRIES) {
+    const srcPath = path.join(frameworkDir, entry);
+    const destPath = path.join(CONFIG_DIR, entry);
 
     const result = await copyPath(srcPath, destPath);
     copied += result.copied;
@@ -84,6 +130,7 @@ export async function installConfig(): Promise<InstallResult> {
     status: hasErrors ? (copied > 0 ? 'partial' : 'failed') : 'success',
     success: !hasErrors,
     filesInstalled: copied,
+    frameworkId,
     errors,
   };
 }

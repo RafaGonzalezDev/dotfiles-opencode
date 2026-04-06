@@ -4,12 +4,14 @@ import type { BackupResult, InstallResult, VerifyResult } from '../types/index.j
 import { getConfigDir } from '../utils/paths.js';
 
 interface SummaryScreenProps {
+  frameworkName?: string | null;
   installResult: InstallResult;
   backupResult: BackupResult | null;
   verifyResult: VerifyResult;
 }
 
 export function SummaryScreen({
+  frameworkName,
   installResult,
   backupResult,
   verifyResult,
@@ -36,6 +38,12 @@ export function SummaryScreen({
       <Box paddingBottom={1}>
         <Text>Files installed: {installResult.filesInstalled}</Text>
       </Box>
+
+      {frameworkName && (
+        <Box paddingBottom={1}>
+          <Text>Framework: {frameworkName}</Text>
+        </Box>
+      )}
       
       {backupResult && backupResult.backupPath && (
         <Box paddingBottom={1}>
@@ -43,7 +51,11 @@ export function SummaryScreen({
         </Box>
       )}
       {backupResult && backupResult.backupPath && (
-        <Text dimColor>  {backupResult.backupPath}</Text>
+        <Text dimColor>
+          {'  '}
+          {backupResult.backupPath}
+          {backupResult.frameworkId ? ` (${backupResult.frameworkId})` : ''}
+        </Text>
       )}
 
       <Box paddingTop={1}>
