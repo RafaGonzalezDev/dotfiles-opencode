@@ -24,6 +24,7 @@ A comprehensive configuration framework that orchestrates specialized AI agents 
 - [Workflow Example](#workflow-example)
 - [Installation](#installation)
   - [Quick Start](#quick-start)
+  - [CLI Setup (Interactive Installer)](#cli-setup-interactive-installer)
 - [Advanced Usage](#advanced-usage)
 - [Troubleshooting](#troubleshooting)
 - [File Descriptions](#file-descriptions)
@@ -556,7 +557,59 @@ cp -r opencode/* ~/.config/opencode/
 cp -r opencode/* %USERPROFILE%/.config/opencode/
 ```
 
-### Global Configuration (Recommended)
+### CLI Setup (Interactive Installer)
+
+For an interactive setup experience that handles everything automatically, use the CLI tool:
+
+```bash
+cd dotfiles-opencode
+npm install
+npm run setup
+```
+
+This root-level workflow installs the CLI dependencies, builds the installer, bundles the required OpenCode assets, and launches the interactive setup without changing directories.
+
+If you prefer to run the CLI package directly, this still works:
+
+```bash
+cd dotfiles-opencode/cli
+npm install
+npm start
+```
+
+The CLI will guide you through:
+1. **System Check** - Verifies Node.js, npm, Git, and Homebrew availability
+2. **OpenCode Installation** - Offers Homebrew (recommended) or npm installation
+3. **Configuration Detection** - Detects existing OpenCode config in `~/.config/opencode/`
+4. **Backup Creation** - Automatically creates a safety backup before any installation or restore that writes files
+5. **Installation** - Copies agents, skills, and configuration files
+6. **Verification** - Validates the installation was successful
+7. **Backup Restore** - Lets you browse and restore one of the 5 most recent backups from the interactive UI when conflicts are detected
+
+If Homebrew is not installed on macOS, Linux, or WSL, the recommended path installs Homebrew first and then installs OpenCode with `brew install opencode`.
+
+**CLI Options:**
+- `--dry-run` - Preview what would be installed without making changes
+- `--force` - Skip confirmation prompts (useful for CI/CD)
+- `--skip-opencode-check` - Skip the OpenCode installation verification
+- `--verbose` - Show detailed logs during installation
+
+If required prerequisites such as Node.js, npm, or Git are missing, the CLI will stop and show what needs to be installed before continuing.
+
+If an existing OpenCode configuration is detected, the CLI will:
+- create a safety backup automatically before installing
+- allow you to inspect differences without triggering the installation
+- show up to 5 recent backups that can be restored interactively
+
+**Homebrew Installation:**
+If you're on macOS, Linux, or WSL and Homebrew is not installed, the CLI will offer to install it automatically using:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+On Windows native, the CLI will recommend the npm installation path instead of Homebrew.
+
+## Global Configuration (Recommended)
 
 Copy files to OpenCode's global config directory:
 
