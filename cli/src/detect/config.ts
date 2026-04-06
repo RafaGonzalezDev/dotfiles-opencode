@@ -2,10 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import type { ConfigDetectionResult, ConfigFile } from '../types/index.js';
-import { getConfigDir, getOpencodeSourceDir } from '../utils/paths.js';
+import { getConfigDir } from '../utils/paths.js';
+import { getFrameworkSourceDir } from '../frameworks/index.js';
 
 const CONFIG_DIR = getConfigDir();
-const REPO_CONFIG_DIR = getOpencodeSourceDir();
 
 async function getFileHash(filePath: string): Promise<string> {
   try {
@@ -70,12 +70,14 @@ async function compareDirectories(repoDir: string, configDir: string): Promise<C
   return 'identical';
 }
 
-export async function detectConfig(): Promise<ConfigDetectionResult> {
+export async function detectConfig(frameworkId: string): Promise<ConfigDetectionResult> {
+  const frameworkDir = await getFrameworkSourceDir(frameworkId);
   const configExists = await fileExists(CONFIG_DIR);
   
   if (!configExists) {
     return {
       configDirExists: false,
+      frameworkId,
       files: [],
     };
   }
@@ -84,7 +86,7 @@ export async function detectConfig(): Promise<ConfigDetectionResult> {
   const configFiles = ['opencode.json', 'AGENTS.md'];
   
   for (const file of configFiles) {
-    const repoPath = path.join(REPO_CONFIG_DIR, file);
+    const repoPath = path.join(frameworkDir, file);
     const configPath = path.join(CONFIG_DIR, file);
     
     const repoExists = await fileExists(repoPath);
@@ -113,7 +115,7 @@ export async function detectConfig(): Promise<ConfigDetectionResult> {
   }
   
   // Check agents directory
-  const repoAgentsDir = path.join(REPO_CONFIG_DIR, 'agents');
+  const repoAgentsDir = path.join(frameworkDir, 'agents');
   const configAgentsDir = path.join(CONFIG_DIR, 'agents');
   
   const repoAgentsExists = await fileExists(repoAgentsDir);
@@ -126,7 +128,7 @@ export async function detectConfig(): Promise<ConfigDetectionResult> {
   }
   
   // Check skills directory
-  const repoSkillsDir = path.join(REPO_CONFIG_DIR, 'skills');
+  const repoSkillsDir = path.join(frameworkDir, 'skills');
   const configSkillsDir = path.join(CONFIG_DIR, 'skills');
   
   const repoSkillsExists = await fileExists(repoSkillsDir);
@@ -140,6 +142,7 @@ export async function detectConfig(): Promise<ConfigDetectionResult> {
   
   return {
     configDirExists: true,
+    frameworkId,
     files,
   };
 }

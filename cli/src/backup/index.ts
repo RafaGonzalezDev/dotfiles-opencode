@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { BackupEntry, BackupResult } from '../types/index.js';
+import type { BackupEntry, BackupManifest, BackupResult } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
 import { MANAGED_CONFIG_ENTRIES } from '../utils/managed-config.js';
 
@@ -78,7 +78,23 @@ async function countFiles(rootDir: string): Promise<number> {
   return total;
 }
 
-export async function createBackup(): Promise<BackupResult> {
+async function readBackupManifest(backupPath: string): Promise<BackupManifest | null> {
+  try {
+    const manifestPath = path.join(backupPath, 'manifest.json');
+    const content = await fs.promises.readFile(manifestPath, 'utf-8');
+    const parsed = JSON.parse(content) as BackupManifest;
+
+    if (!Array.isArray(parsed.entries)) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export async function createBackup(context?: { frameworkId?: string | null }): Promise<BackupResult> {
   try {
     await fs.promises.access(CONFIG_DIR);
   } catch {
@@ -86,6 +102,7 @@ export async function createBackup(): Promise<BackupResult> {
       success: true,
       backupPath: null,
       filesBackedUp: 0,
+      frameworkId: context?.frameworkId ?? null,
     };
   }
 
@@ -103,6 +120,7 @@ export async function createBackup(): Promise<BackupResult> {
       success: true,
       backupPath: null,
       filesBackedUp: 0,
+      frameworkId: context?.frameworkId ?? null,
     };
   }
 
@@ -120,10 +138,24 @@ export async function createBackup(): Promise<BackupResult> {
     filesBackedUp += await copyPath(srcPath, destPath);
   }
 
+  const manifest: BackupManifest = {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    frameworkId: context?.frameworkId ?? null,
+    entries: [...existingEntries],
+  };
+
+  await fs.promises.writeFile(
+    path.join(backupPath, 'manifest.json'),
+    JSON.stringify(manifest, null, 2) + '\n',
+    'utf-8'
+  );
+
   return {
     success: true,
     backupPath,
     filesBackedUp,
+    frameworkId: manifest.frameworkId,
   };
 }
 
@@ -136,13 +168,15 @@ export async function listRecentBackups(limit = 5): Promise<BackupEntry[]> {
         .map(async (entry) => {
           const backupPath = path.join(BACKUPS_DIR, entry.name);
           const stats = await fs.promises.stat(backupPath);
+          const manifest = await readBackupManifest(backupPath);
           const filesBackedUp = await countFiles(backupPath);
 
           return {
             name: entry.name,
             path: backupPath,
             createdAt: stats.mtime.toISOString(),
-            filesBackedUp,
+            filesBackedUp: manifest ? Math.max(0, filesBackedUp - 1) : filesBackedUp,
+            frameworkId: manifest?.frameworkId ?? null,
           };
         })
     );
