@@ -5,6 +5,7 @@ import { gatherSystemInfo, getBlockingSystemFailures, getSystemChecks } from './
 import { checkOpenCode } from './checks/opencode.js';
 import { detectConfig } from './detect/config.js';
 import { createBackup, listRecentBackups, restoreBackup } from './backup/index.js';
+import { listFrameworks } from './frameworks/index.js';
 import { installConfig } from './install/index.js';
 import { verifyInstallation } from './verify/index.js';
 import { WelcomeScreen } from './ui/welcome.js';
@@ -18,6 +19,7 @@ import { PrerequisitesBlockedScreen } from './ui/prerequisites-blocked.js';
 import { RecentBackupsScreen } from './ui/recent-backups.js';
 import { DifferencesScreen } from './ui/differences.js';
 import { InstallConfirmationScreen } from './ui/install-confirmation.js';
+import { FrameworkSelectionScreen } from './ui/framework-selection.js';
 import { installHomebrew } from './installers/homebrew.js';
 import { getOpenCodeInstallCommand, installOpenCode } from './installers/opencode.js';
 import type {
@@ -25,6 +27,7 @@ import type {
   BackupResult,
   CheckResult,
   ConfigDetectionResult,
+  FrameworkDefinition,
   InstallResult,
   OpenCodeStatus,
   SystemInfo,
@@ -48,6 +51,7 @@ type Phase =
   | 'opencode-install'
   | 'opencode-installing'
   | 'opencode-manual'
+  | 'framework-selection'
   | 'config-detection'
   | 'install-confirmation'
   | 'conflict-resolution'
@@ -72,6 +76,8 @@ export function App({ flags }: AppProps) {
   const [systemChecks, setSystemChecks] = useState<CheckResult[]>([]);
   const [isChecking, setIsChecking] = useState(false);
   const [openCodeStatus, setOpenCodeStatus] = useState<OpenCodeStatus | null>(null);
+  const [frameworks, setFrameworks] = useState<FrameworkDefinition[]>([]);
+  const [selectedFramework, setSelectedFramework] = useState<FrameworkDefinition | null>(null);
   const [configDetection, setConfigDetection] = useState<ConfigDetectionResult | null>(null);
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
   const [installResult, setInstallResult] = useState<InstallResult | null>(null);
@@ -81,7 +87,9 @@ export function App({ flags }: AppProps) {
   const [manualInstallCommand, setManualInstallCommand] = useState<string | null>(null);
   const [recentBackups, setRecentBackups] = useState<BackupEntry[]>([]);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
-  const [backupBrowserOrigin, setBackupBrowserOrigin] = useState<'welcome' | 'conflict-resolution' | 'install-confirmation'>('conflict-resolution');
+  const [backupBrowserOrigin, setBackupBrowserOrigin] = useState<
+    'welcome' | 'conflict-resolution' | 'install-confirmation'
+  >('conflict-resolution');
   const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
 
   const handleWelcomeStartSetup = () => {
@@ -117,8 +125,7 @@ export function App({ flags }: AppProps) {
     }
 
     if (flags.skipOpencodeCheck) {
-      setPhase('config-detection');
-      void runConfigDetection();
+      void loadFrameworksAndContinue();
       return;
     }
 
@@ -132,8 +139,7 @@ export function App({ flags }: AppProps) {
       setOpenCodeStatus(status);
 
       if (status.installed) {
-        setPhase('config-detection');
-        void runConfigDetection();
+        await loadFrameworksAndContinue();
       } else {
         setOpencodeInstallError(null);
         setPhase('opencode-install');
@@ -143,6 +149,48 @@ export function App({ flags }: AppProps) {
       setOpenCodeStatus({ installed: false, version: null, path: null });
       setOpencodeInstallError(null);
       setPhase('opencode-install');
+    }
+  }
+
+  async function loadFrameworksAndContinue() {
+    try {
+      const availableFrameworks = await listFrameworks();
+      setFrameworks(availableFrameworks);
+
+      if (availableFrameworks.length === 0) {
+        setInstallResult({
+          status: 'failed',
+          success: false,
+          filesInstalled: 0,
+          errors: ['No valid frameworks were found in the repository assets.'],
+        });
+        setVerifyResult({ valid: false, errors: ['Framework discovery failed'], warnings: [] });
+        setPhase('summary');
+        return;
+      }
+
+      const initialFramework =
+        availableFrameworks.find((framework) => framework.id === 'default') || availableFrameworks[0];
+
+      setSelectedFramework(initialFramework);
+
+      if (flags.force) {
+        setPhase('config-detection');
+        await runConfigDetection(initialFramework.id);
+        return;
+      }
+
+      setPhase('framework-selection');
+    } catch (error) {
+      console.error('Framework discovery failed:', error);
+      setInstallResult({
+        status: 'failed',
+        success: false,
+        filesInstalled: 0,
+        errors: [error instanceof Error ? error.message : 'Unknown framework discovery error'],
+      });
+      setVerifyResult({ valid: false, errors: ['Framework discovery failed'], warnings: [] });
+      setPhase('summary');
     }
   }
 
@@ -202,9 +250,9 @@ export function App({ flags }: AppProps) {
     setPhase('opencode-manual');
   };
 
-  async function runConfigDetection() {
+  async function runConfigDetection(frameworkId: string) {
     try {
-      const detection = await detectConfig();
+      const detection = await detectConfig(frameworkId);
       setConfigDetection(detection);
 
       const hasConflicts = detection.files.some((file) => file.status === 'different');
@@ -230,7 +278,7 @@ export function App({ flags }: AppProps) {
 
   async function runBackup(): Promise<BackupResult> {
     try {
-      const result = await createBackup();
+      const result = await createBackup({ frameworkId: selectedFramework?.id ?? null });
       setBackupResult(result);
       return result;
     } catch (error) {
@@ -239,12 +287,20 @@ export function App({ flags }: AppProps) {
         success: false,
         backupPath: null,
         filesBackedUp: 0,
+        frameworkId: selectedFramework?.id ?? null,
         error: error instanceof Error ? error.message : 'Unknown backup error',
       };
       setBackupResult(failedResult);
       return failedResult;
     }
   }
+
+  const handleFrameworkSelect = async (framework: FrameworkDefinition) => {
+    setSelectedFramework(framework);
+    setRestoreMessage(null);
+    setPhase('config-detection');
+    await runConfigDetection(framework.id);
+  };
 
   const handleContinueInstall = async () => {
     setRestoreMessage(null);
@@ -291,7 +347,10 @@ export function App({ flags }: AppProps) {
       return;
     }
 
-    const successMessage = `Restored ${result.filesRestored} files from ${backup.name}. Safety backup: ${safetyBackup.backupPath}.`;
+    const frameworkMessage = backup.frameworkId ? ` Framework: ${backup.frameworkId}.` : '';
+    const successMessage =
+      `Restored ${result.filesRestored} files from ${backup.name}.` +
+      `${frameworkMessage} Safety backup: ${safetyBackup.backupPath}.`;
 
     if (backupBrowserOrigin === 'welcome') {
       setWelcomeMessage(successMessage);
@@ -306,8 +365,13 @@ export function App({ flags }: AppProps) {
     }
 
     setRestoreMessage(successMessage);
-    setPhase('config-detection');
-    await runConfigDetection();
+    if (selectedFramework) {
+      setPhase('config-detection');
+      await runConfigDetection(selectedFramework.id);
+      return;
+    }
+
+    setPhase('welcome');
   };
 
   const handleCancel = () => {
@@ -316,14 +380,40 @@ export function App({ flags }: AppProps) {
   };
 
   async function runInstallation(detectionOverride?: ConfigDetectionResult) {
+    if (!selectedFramework) {
+      setInstallResult({
+        status: 'failed',
+        success: false,
+        filesInstalled: 0,
+        errors: ['No framework selected for installation.'],
+      });
+      setVerifyResult({ valid: false, errors: ['Installation failed'], warnings: [] });
+      setPhase('summary');
+      return;
+    }
+
     if (flags.dryRun) {
-      console.log('\n[Dry run] Would install the following files:');
+      console.log(
+        `\n[Dry run] Would install framework: ${selectedFramework.name} (${selectedFramework.id})`
+      );
+      console.log('[Dry run] Managed entries would be removed before reinstalling:');
+      console.log('  - opencode.json');
+      console.log('  - AGENTS.md');
+      console.log('  - agents/');
+      console.log('  - skills/');
+      console.log('[Dry run] Managed entries would then be copied from the selected framework:');
       console.log('  - opencode.json');
       console.log('  - AGENTS.md');
       console.log('  - agents/');
       console.log('  - skills/');
       setPhase('summary');
-      setInstallResult({ status: 'success', success: true, filesInstalled: 0, errors: [] });
+      setInstallResult({
+        status: 'success',
+        success: true,
+        filesInstalled: 0,
+        frameworkId: selectedFramework.id,
+        errors: [],
+      });
       setVerifyResult({ valid: true, errors: [], warnings: [] });
       return;
     }
@@ -332,7 +422,7 @@ export function App({ flags }: AppProps) {
       const detection = detectionOverride || configDetection;
       if (detection?.configDirExists) {
         setPhase('backup');
-        setInstallMessage('Creating safety backup...');
+        setInstallMessage(`Creating safety backup before switching to "${selectedFramework.name}"...`);
         const backup = await runBackup();
 
         if (!backup.success) {
@@ -340,6 +430,7 @@ export function App({ flags }: AppProps) {
             status: 'failed',
             success: false,
             filesInstalled: 0,
+            frameworkId: selectedFramework.id,
             errors: [`Backup failed: ${backup.error || 'Unable to create safety backup'}`],
           });
           setVerifyResult({
@@ -353,8 +444,8 @@ export function App({ flags }: AppProps) {
       }
 
       setPhase('installation');
-      setInstallMessage('Copying files...');
-      const result = await installConfig();
+      setInstallMessage(`Replacing managed files with framework "${selectedFramework.name}"...`);
+      const result = await installConfig(selectedFramework.id);
       setInstallResult(result);
 
       setPhase('verification');
@@ -365,6 +456,7 @@ export function App({ flags }: AppProps) {
         status: 'failed',
         success: false,
         filesInstalled: 0,
+        frameworkId: selectedFramework.id,
         errors: [error instanceof Error ? error.message : 'Unknown error'],
       });
       setPhase('summary');
@@ -426,12 +518,7 @@ export function App({ flags }: AppProps) {
       );
 
     case 'opencode-installing':
-      return (
-        <InstallationProgressScreen
-          phase="Installing OpenCode"
-          messages={[installMessage]}
-        />
-      );
+      return <InstallationProgressScreen phase="Installing OpenCode" messages={[installMessage]} />;
 
     case 'opencode-manual':
       return (
@@ -451,23 +538,42 @@ export function App({ flags }: AppProps) {
     case 'opencode-check':
       return (
         <Box>
-          <Text><Spinner /> Checking OpenCode installation...</Text>
+          <Text>
+            <Spinner /> Checking OpenCode installation...
+          </Text>
         </Box>
+      );
+
+    case 'framework-selection':
+      return (
+        <FrameworkSelectionScreen
+          frameworks={frameworks}
+          selectedFrameworkId={selectedFramework?.id}
+          onSelect={(framework) => void handleFrameworkSelect(framework)}
+          onCancel={handleCancel}
+        />
       );
 
     case 'config-detection':
       return (
         <InstallationProgressScreen
           phase="Detecting existing configuration"
-          messages={['Checking configuration...', 'Un momento...', 'Casi listo...']}
+          messages={[
+            selectedFramework
+              ? `Checking configuration against framework "${selectedFramework.name}"...`
+              : 'Checking configuration...',
+            'Un momento...',
+            'Casi listo...',
+          ]}
         />
       );
 
     case 'conflict-resolution':
       return (
         <ConflictResolutionScreen
+          frameworkName={selectedFramework?.name || selectedFramework?.id || 'selected framework'}
           conflicts={configDetection?.files.filter((file) => file.status === 'different') || []}
-          backupNotice="Any installation now creates a safety backup automatically before writing files."
+          backupNotice="Any installation now creates a safety backup automatically before cleaning and replacing the managed files."
           restoreNotice={restoreMessage}
           onContinueInstall={() => void handleContinueInstall()}
           onViewDiff={handleViewDiff}
@@ -479,8 +585,9 @@ export function App({ flags }: AppProps) {
     case 'install-confirmation':
       return (
         <InstallConfirmationScreen
+          frameworkName={selectedFramework?.name || selectedFramework?.id || 'selected framework'}
           files={configDetection?.files || []}
-          backupNotice="The installer will create a safety backup automatically before importing anything."
+          backupNotice="The installer will create a safety backup automatically before cleaning and importing the managed files."
           restoreNotice={restoreMessage}
           onContinueInstall={() => void handleContinueInstall()}
           onShowRecentBackups={async () => {
@@ -496,6 +603,7 @@ export function App({ flags }: AppProps) {
     case 'view-differences':
       return (
         <DifferencesScreen
+          frameworkName={selectedFramework?.name || selectedFramework?.id || 'selected framework'}
           conflicts={configDetection?.files.filter((file) => file.status === 'different') || []}
           onBack={() => setPhase('conflict-resolution')}
         />
@@ -505,6 +613,7 @@ export function App({ flags }: AppProps) {
       return (
         <RecentBackupsScreen
           backups={recentBackups}
+          selectedFrameworkName={selectedFramework?.name || null}
           message={backupBrowserOrigin === 'welcome' ? welcomeMessage : restoreMessage}
           onRestore={(backup) => void handleRestoreBackup(backup)}
           onBack={() => setPhase(backupBrowserOrigin)}
@@ -515,7 +624,11 @@ export function App({ flags }: AppProps) {
       return (
         <InstallationProgressScreen
           phase="Creating backup"
-          messages={[installMessage, 'Saving current configuration...', 'Preparing a safe restore point...']}
+          messages={[
+            installMessage,
+            'Saving current managed configuration...',
+            'Preparing a safe restore point...',
+          ]}
         />
       );
 
@@ -531,7 +644,7 @@ export function App({ flags }: AppProps) {
       return (
         <InstallationProgressScreen
           phase="Installing configuration"
-          messages={[installMessage, 'Copying files...', 'Un momento...', 'Finalizando...']}
+          messages={[installMessage, 'Cleaning managed files...', 'Copying framework files...', 'Finalizando...']}
         />
       );
 
@@ -546,6 +659,7 @@ export function App({ flags }: AppProps) {
     case 'summary':
       return (
         <SummaryScreen
+          frameworkName={selectedFramework?.name || selectedFramework?.id || null}
           installResult={
             installResult || {
               status: 'failed',

@@ -5,6 +5,7 @@ import type { BackupEntry } from '../types/index.js';
 
 interface RecentBackupsScreenProps {
   backups: BackupEntry[];
+  selectedFrameworkName?: string | null;
   message?: string | null;
   onRestore: (backup: BackupEntry) => void;
   onBack: () => void;
@@ -17,12 +18,15 @@ function formatTimestamp(value: string): string {
 
 export function RecentBackupsScreen({
   backups,
+  selectedFrameworkName,
   message,
   onRestore,
   onBack,
 }: RecentBackupsScreenProps) {
   const items = backups.map((backup) => ({
-    label: `${formatTimestamp(backup.createdAt)} · ${backup.filesBackedUp} files`,
+    label: `${formatTimestamp(backup.createdAt)} · ${backup.filesBackedUp} files${
+      backup.frameworkId ? ` · ${backup.frameworkId}` : ''
+    }`,
     value: backup.path,
   }));
 
@@ -36,6 +40,12 @@ export function RecentBackupsScreen({
       <Box paddingBottom={1}>
         <Text bold color="cyan">Recent backups</Text>
       </Box>
+
+      {selectedFrameworkName && (
+        <Box paddingBottom={1}>
+          <Text dimColor>Current selected framework: {selectedFrameworkName}</Text>
+        </Box>
+      )}
 
       {message && (
         <Box paddingBottom={1}>
@@ -80,6 +90,7 @@ export function RecentBackupsScreen({
           {backups.map((backup) => (
             <Text key={backup.path} dimColor>
               {backup.name}: {backup.path}
+              {backup.frameworkId ? ` (${backup.frameworkId})` : ''}
             </Text>
           ))}
         </Box>

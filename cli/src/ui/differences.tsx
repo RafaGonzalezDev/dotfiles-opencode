@@ -3,11 +3,12 @@ import { Box, Text, useInput } from 'ink';
 import type { ConfigFile } from '../types/index.js';
 
 interface DifferencesScreenProps {
+  frameworkName: string;
   conflicts: ConfigFile[];
   onBack: () => void;
 }
 
-export function DifferencesScreen({ conflicts, onBack }: DifferencesScreenProps) {
+export function DifferencesScreen({ frameworkName, conflicts, onBack }: DifferencesScreenProps) {
   useInput((_input, key) => {
     if (key.return || key.escape) {
       onBack();
@@ -20,7 +21,7 @@ export function DifferencesScreen({ conflicts, onBack }: DifferencesScreenProps)
         <Text bold color="yellow">Detected differences</Text>
       </Box>
 
-      <Text>The following items differ from the repository version:</Text>
+      <Text>The following items differ from the selected framework: {frameworkName}</Text>
 
       <Box flexDirection="column" paddingTop={1} paddingLeft={2}>
         {conflicts.map((file) => (

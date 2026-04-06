@@ -4,6 +4,7 @@ import SelectInput from 'ink-select-input';
 import type { ConfigFile } from '../types/index.js';
 
 interface InstallConfirmationScreenProps {
+  frameworkName: string;
   files: ConfigFile[];
   backupNotice?: string | null;
   restoreNotice?: string | null;
@@ -13,6 +14,7 @@ interface InstallConfirmationScreenProps {
 }
 
 export function InstallConfirmationScreen({
+  frameworkName,
   files,
   backupNotice,
   restoreNotice,
@@ -22,7 +24,9 @@ export function InstallConfirmationScreen({
 }: InstallConfirmationScreenProps) {
   const hasChanges = files.some((file) => file.status === 'different' || file.status === 'new');
   const hasExistingConfig = files.some((file) => file.status !== 'new');
-  const heading = hasChanges
+  const heading = files.length === 0
+    ? 'A new OpenCode configuration will be installed'
+    : hasChanges
     ? hasExistingConfig
       ? 'Your OpenCode configuration will be updated'
       : 'A new OpenCode configuration will be installed'
@@ -41,6 +45,10 @@ export function InstallConfirmationScreen({
     <Box flexDirection="column" padding={1}>
       <Box paddingBottom={1}>
         <Text bold color="cyan">Ready to import configuration</Text>
+      </Box>
+
+      <Box paddingBottom={1}>
+        <Text>Selected framework: {frameworkName}</Text>
       </Box>
 
       {backupNotice && (
