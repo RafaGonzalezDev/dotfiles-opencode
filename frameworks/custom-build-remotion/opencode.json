@@ -12,51 +12,59 @@
       "enabled": true
     },
     "remotion-documentation": {
-      "command": "npx",
-      "args": ["@remotion/mcp@latest"]
+      "type": "local",
+      "command": ["npx", "-y", "@remotion/mcp@latest"],
+      "enabled": true
     }
   },
   "agent": {
     "plan": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "remotion-documentation*": true
       }
     },
     "build": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "remotion-documentation*": true
       }
     },
     "explore": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "remotion-documentation*": true
       }
     },
     "general": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "remotion-documentation*": true
       }
     },
     "testing": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "remotion-documentation*": true
       }
     },
     "debug": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "remotion-documentation*": true
       }
     },
     "review": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "remotion-documentation*": true
       }
     }
   }
