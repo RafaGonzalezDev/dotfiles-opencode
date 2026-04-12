@@ -48,21 +48,23 @@ export function SummaryScreen({
         : 'The setup finished with errors. Review the reported issues before retrying.';
 
   const runtimeUpdateLabel =
-    openCodeUpdateResult?.status === 'success'
-      ? openCodeUpdateResult.previousVersion &&
-        openCodeUpdateResult.currentVersion &&
-        openCodeUpdateResult.previousVersion === openCodeUpdateResult.currentVersion
-        ? `already on ${openCodeUpdateResult.currentVersion}`
-        : `completed via ${openCodeUpdateResult.method}${
+    openCodeUpdateResult?.status === 'updated'
+      ? `updated via ${openCodeUpdateResult.method}${
             openCodeUpdateResult.previousVersion || openCodeUpdateResult.currentVersion
               ? ` (${openCodeUpdateResult.previousVersion || 'unknown'} -> ${openCodeUpdateResult.currentVersion || 'unknown'})`
               : ''
           }`
+      : openCodeUpdateResult?.status === 'unchanged'
+        ? `command completed via ${openCodeUpdateResult.method}, but the active binary version did not change${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
+      : openCodeUpdateResult?.status === 'verification-mismatch'
+        ? `command completed via ${openCodeUpdateResult.method}, but the active binary is linked to ${openCodeUpdateResult.activeInstallMethod || 'another installation'}${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
+      : openCodeUpdateResult?.status === 'unverified'
+        ? `command completed via ${openCodeUpdateResult.method}, but the active installation could not be verified${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
       : openCodeUpdateResult?.status === 'skipped'
         ? `skipped by user${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
-        : openCodeUpdateResult?.status === 'failed'
-          ? `failed via ${openCodeUpdateResult.method}${
-              openCodeUpdateResult.currentVersion || openCodeUpdateResult.previousVersion
+          : openCodeUpdateResult?.status === 'failed'
+            ? `failed via ${openCodeUpdateResult.method}${
+                openCodeUpdateResult.currentVersion || openCodeUpdateResult.previousVersion
                 ? ` (${openCodeUpdateResult.currentVersion || openCodeUpdateResult.previousVersion})`
                 : ''
             }`
