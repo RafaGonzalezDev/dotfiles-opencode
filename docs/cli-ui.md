@@ -59,6 +59,17 @@ want to update the runtime first.
 - Homebrew: `brew update` and `brew upgrade opencode`
 - npm: `npm install -g opencode-ai`
 
+### Runtime verification
+
+The CLI now separates three concerns before reporting an update result:
+
+- detecting the active `opencode` binary on `PATH`
+- matching that binary to a known Homebrew/npm installation when possible
+- classifying the post-update result as `updated`, `unchanged`, `verification mismatch`, `unverified`, `failed`, or `skipped`
+
+This avoids claiming that OpenCode is already current unless the active binary was
+actually re-checked after running the selected update command.
+
 ### Why
 
 Updating the runtime is operationally different from installing a framework.

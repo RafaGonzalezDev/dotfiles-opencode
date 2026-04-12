@@ -19,12 +19,20 @@ type FrameworkRow =
   | { type: 'action'; key: string; label: string; value: 'skip' };
 
 function getUpdateFeedback(result: OpenCodeUpdateResult): string {
-  if (result.status === 'success') {
-    if (result.previousVersion && result.currentVersion && result.previousVersion === result.currentVersion) {
-      return `OpenCode is already on version ${result.currentVersion}.`;
-    }
+  if (result.status === 'updated') {
+    return `OpenCode updated${result.previousVersion ? ` from ${result.previousVersion}` : ''} to ${result.currentVersion || 'an updated detected version'}.`;
+  }
 
-    return `OpenCode updated${result.previousVersion ? ` from ${result.previousVersion}` : ''} to ${result.currentVersion || 'the latest detected version'}.`;
+  if (result.status === 'unchanged') {
+    return `OpenCode update command completed, but the active binary version did not change${result.currentVersion ? ` (${result.currentVersion})` : ''}.`;
+  }
+
+  if (result.status === 'verification-mismatch') {
+    return `OpenCode update ran via ${result.method}, but the active binary appears to come from ${result.activeInstallMethod || 'another installation'}.`;
+  }
+
+  if (result.status === 'unverified') {
+    return 'OpenCode update command completed, but the CLI could not verify that it affected the active installation.';
   }
 
   if (result.status === 'skipped') {
@@ -174,11 +182,15 @@ export function FrameworkSelectionScreen({
             <Box paddingBottom={1}>
               <StatusBanner
                 tone={
-                  openCodeUpdateResult.status === 'success'
+                  openCodeUpdateResult.status === 'updated'
                     ? 'success'
-                    : openCodeUpdateResult.status === 'failed'
-                      ? 'danger'
-                      : 'info'
+                    : openCodeUpdateResult.status === 'failed' ||
+                        openCodeUpdateResult.status === 'verification-mismatch'
+                       ? 'danger'
+                      : openCodeUpdateResult.status === 'unchanged' ||
+                          openCodeUpdateResult.status === 'unverified'
+                        ? 'warning'
+                        : 'info'
                 }
               >
                 {getUpdateFeedback(openCodeUpdateResult)}

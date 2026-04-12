@@ -16,6 +16,36 @@ function getMethodLabel(method: OpenCodeInstallMethod): string {
   return method === 'homebrew' ? 'Update with Homebrew' : 'Update with npm';
 }
 
+function getAlignmentMessage(status: OpenCodeStatus): { tone: 'info' | 'warning'; message: string } | null {
+  if (!status.installed) {
+    return null;
+  }
+
+  if (status.activeInstallMethod) {
+    return {
+      tone: 'info',
+      message: `The active opencode binary is linked to ${status.activeInstallMethod}.`,
+    };
+  }
+
+  if (status.installationAlignment === 'mismatch') {
+    return {
+      tone: 'warning',
+      message:
+        'The active opencode binary could not be matched to the detected Homebrew/npm installations. Updating one method may not change the binary currently on PATH.',
+    };
+  }
+
+  if (status.installMethods.length > 0) {
+    return {
+      tone: 'warning',
+      message: 'The CLI detected a managed installation, but could not verify which method owns the active opencode binary.',
+    };
+  }
+
+  return null;
+}
+
 function formatMethodList(methods: OpenCodeInstallMethod[]): string {
   if (methods.length === 0) {
     return 'Unknown';
@@ -33,6 +63,7 @@ export function OpenCodeUpdateScreen({
   onContinueWithoutUpdate,
   onBack,
 }: OpenCodeUpdateScreenProps) {
+  const alignmentMessage = getAlignmentMessage(status);
   const items: Array<Parameters<typeof MenuList<string>>[0]['items'][number]> = [
     { type: 'section', key: 'methods', label: 'Update methods' },
     ...status.installMethods.map((method) => ({
@@ -72,13 +103,23 @@ export function OpenCodeUpdateScreen({
               <StatusBanner tone="danger">{errorMessage}</StatusBanner>
             </Box>
           )}
+          {alignmentMessage && (
+            <Box paddingBottom={1}>
+              <StatusBanner tone={alignmentMessage.tone}>{alignmentMessage.message}</StatusBanner>
+            </Box>
+          )}
           <SectionCard title="Detected runtime">
             <LabeledValue label="Version" value={status.version || 'Unknown'} />
             <LabeledValue label="Path" value={status.path || 'Unknown'} />
             <LabeledValue label="Managed by" value={formatMethodList(status.installMethods)} />
+            <LabeledValue
+              label="Active method"
+              value={status.activeInstallMethod || 'Unable to verify'}
+              tone={status.activeInstallMethod ? 'info' : 'warning'}
+            />
           </SectionCard>
           <Box paddingTop={1}>
-            <Text dimColor>The CLI never updates Homebrew or OpenCode automatically.</Text>
+            <Text dimColor>The CLI only updates OpenCode when you explicitly choose an update method below.</Text>
           </Box>
         </Box>
       }

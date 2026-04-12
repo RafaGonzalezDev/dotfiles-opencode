@@ -22,6 +22,8 @@ export interface OpenCodeStatus {
   version: string | null;
   path: string | null;
   installMethods: OpenCodeInstallMethod[];
+  activeInstallMethod: OpenCodeInstallMethod | null;
+  installationAlignment: 'matched' | 'mismatch' | 'unknown';
 }
 
 export type OpenCodeInstallMethod = 'homebrew' | 'npm';
@@ -84,9 +86,17 @@ export interface VerifyResult {
 }
 
 export interface OpenCodeUpdateResult {
-  status: 'idle' | 'skipped' | 'success' | 'failed';
+  status:
+    | 'idle'
+    | 'skipped'
+    | 'updated'
+    | 'unchanged'
+    | 'verification-mismatch'
+    | 'unverified'
+    | 'failed';
   method: OpenCodeInstallMethod | null;
   previousVersion?: string | null;
   currentVersion?: string | null;
+  activeInstallMethod?: OpenCodeInstallMethod | null;
   error?: string;
 }

@@ -75,6 +75,68 @@ const INSTALL_MESSAGES = [
   'Finalizando...',
 ];
 
+function classifyOpenCodeUpdateResult(
+  method: OpenCodeInstallMethod,
+  previousVersion: string | null,
+  refreshedStatus: OpenCodeStatus
+): OpenCodeUpdateResult {
+  if (!refreshedStatus.installed) {
+    return {
+      status: 'failed',
+      method,
+      previousVersion,
+      currentVersion: null,
+      activeInstallMethod: null,
+      error: 'Update command completed, but the active opencode binary could not be verified afterwards.',
+    };
+  }
+
+  if (
+    refreshedStatus.installMethods.length > 0 &&
+    refreshedStatus.activeInstallMethod !== null &&
+    refreshedStatus.activeInstallMethod !== method
+  ) {
+    return {
+      status: 'verification-mismatch',
+      method,
+      previousVersion,
+      currentVersion: refreshedStatus.version,
+      activeInstallMethod: refreshedStatus.activeInstallMethod,
+      error: `The update ran with ${method}, but the active opencode binary is linked to ${refreshedStatus.activeInstallMethod}.`,
+    };
+  }
+
+  if (refreshedStatus.installationAlignment === 'mismatch') {
+    return {
+      status: 'unverified',
+      method,
+      previousVersion,
+      currentVersion: refreshedStatus.version,
+      activeInstallMethod: null,
+      error: 'The update command completed, but the active opencode binary could not be matched to the detected Homebrew/npm installation.',
+    };
+  }
+
+  if (previousVersion && refreshedStatus.version && previousVersion !== refreshedStatus.version) {
+    return {
+      status: 'updated',
+      method,
+      previousVersion,
+      currentVersion: refreshedStatus.version,
+      activeInstallMethod: refreshedStatus.activeInstallMethod,
+    };
+  }
+
+  return {
+    status: 'unchanged',
+    method,
+    previousVersion,
+    currentVersion: refreshedStatus.version,
+    activeInstallMethod: refreshedStatus.activeInstallMethod,
+    error: 'The update command completed, but the active opencode version did not change.',
+  };
+}
+
 export function App({ flags }: AppProps) {
   const [phase, setPhase] = useState<Phase>('welcome');
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -157,6 +219,7 @@ export function App({ flags }: AppProps) {
           method: null,
           previousVersion: status.version,
           currentVersion: status.version,
+          activeInstallMethod: status.activeInstallMethod,
         });
 
         if (status.installMethods.length > 0) {
@@ -171,7 +234,14 @@ export function App({ flags }: AppProps) {
       }
     } catch (error) {
       console.error('OpenCode check failed:', error);
-      setOpenCodeStatus({ installed: false, version: null, path: null, installMethods: [] });
+      setOpenCodeStatus({
+        installed: false,
+        version: null,
+        path: null,
+        installMethods: [],
+        activeInstallMethod: null,
+        installationAlignment: 'unknown',
+      });
       setOpencodeInstallError(null);
       setPhase('opencode-install');
     }
@@ -299,6 +369,7 @@ export function App({ flags }: AppProps) {
       method,
       previousVersion,
       currentVersion: previousVersion,
+      activeInstallMethod: openCodeStatus?.activeInstallMethod ?? null,
     });
     setPhase('opencode-installing');
 
@@ -312,6 +383,7 @@ export function App({ flags }: AppProps) {
         method,
         previousVersion,
         currentVersion: previousVersion,
+        activeInstallMethod: openCodeStatus?.activeInstallMethod ?? null,
         error: result.error || 'Failed to update OpenCode.',
       });
       setOpencodeInstallError(result.error || 'Failed to update OpenCode.');
@@ -321,19 +393,20 @@ export function App({ flags }: AppProps) {
 
     const refreshedStatus = await checkOpenCode();
     setOpenCodeStatus(refreshedStatus);
-    setOpenCodeUpdateResult({
-      status: 'success',
-      method,
-      previousVersion,
-      currentVersion: refreshedStatus.version,
-    });
+    setOpenCodeUpdateResult(classifyOpenCodeUpdateResult(method, previousVersion, refreshedStatus));
     await loadFrameworksAndContinue();
   };
 
   const handleContinueWithoutUpdate = async () => {
     setOpencodeInstallError(null);
     setOpenCodeUpdateResult((current) => {
-      if (current.status === 'success') {
+      if (
+        current.status === 'updated' ||
+        current.status === 'unchanged' ||
+        current.status === 'failed' ||
+        current.status === 'verification-mismatch' ||
+        current.status === 'unverified'
+      ) {
         return current;
       }
 
@@ -343,6 +416,7 @@ export function App({ flags }: AppProps) {
         method: null,
         previousVersion: currentVersion,
         currentVersion,
+        activeInstallMethod: openCodeStatus?.activeInstallMethod ?? null,
       };
     });
     await loadFrameworksAndContinue();
@@ -636,6 +710,8 @@ export function App({ flags }: AppProps) {
               version: null,
               path: null,
               installMethods: [],
+              activeInstallMethod: null,
+              installationAlignment: 'unknown',
             }
           }
           errorMessage={opencodeInstallError || openCodeUpdateResult.error || null}

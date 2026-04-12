@@ -53,7 +53,7 @@ export async function updateOpenCode(
 ): Promise<{ success: boolean; error?: string }> {
   onProgress(
     method === 'homebrew'
-      ? 'Updating Homebrew and OpenCode...'
+      ? 'Updating OpenCode with Homebrew...'
       : 'Updating OpenCode with npm...'
   );
   let messageIndex = 0;
