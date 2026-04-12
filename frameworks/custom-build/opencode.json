@@ -11,52 +11,59 @@
       "command": ["npx", "-y", "@upstash/context7-mcp"],
       "enabled": true
     },
-    "remotion-documentation": {
-      "command": "npx",
-      "args": ["@remotion/mcp@latest"]
+    "atlassian": {
+      "type": "remote",
+      "url": "https://mcp.atlassian.com"
     }
   },
   "agent": {
     "plan": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "atlassian": true
       }
     },
     "build": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "atlassian": true
       }
     },
     "explore": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "atlassian": true
       }
     },
     "general": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "atlassian": true
       }
     },
     "testing": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "atlassian": true
       }
     },
     "debug": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "atlassian": true
       }
     },
     "review": {
       "tools": {
         "playwright*": true,
-        "context7*": true
+        "context7*": true,
+        "atlassian": true
       }
     }
   }
