@@ -1,0 +1,4 @@
+interface:
+  display_name: "Accessibility"
+  short_description: "Apply WCAG 2.1 AA and ARIA patterns to UI work."
+  default_prompt: "Review this UI for accessibility issues and suggest fixes."
