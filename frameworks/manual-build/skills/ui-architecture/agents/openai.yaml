@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Architecture"
+  short_description: "Define UI component boundaries, hierarchy, and state ownership."
+  default_prompt: "Propose a UI architecture for this feature."
