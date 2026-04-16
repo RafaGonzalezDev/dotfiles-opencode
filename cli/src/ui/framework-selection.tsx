@@ -80,20 +80,20 @@ export function FrameworkSelectionScreen({
   onCancel,
 }: FrameworkSelectionScreenProps) {
   const rows = useMemo<FrameworkRow[]>(() => {
-    const defaultFramework = frameworks.find((framework) => framework.id === 'default') ?? null;
-    const otherFrameworks = frameworks.filter((framework) => framework.id !== 'default');
+    const vanillaFramework = frameworks.find((framework) => framework.id === 'vanilla') ?? null;
+    const otherFrameworks = frameworks.filter((framework) => framework.id !== 'vanilla');
     const nextRows: FrameworkRow[] = [];
 
-    if (defaultFramework) {
+    if (vanillaFramework) {
       nextRows.push({
         type: 'heading',
-        key: 'heading-default',
-        label: 'Default framework',
+        key: 'heading-vanilla',
+        label: 'Vanilla framework',
       });
       nextRows.push({
         type: 'framework',
-        key: `framework-${defaultFramework.id}`,
-        framework: defaultFramework,
+        key: `framework-${vanillaFramework.id}`,
+        framework: vanillaFramework,
       });
     }
 
@@ -207,7 +207,7 @@ export function FrameworkSelectionScreen({
           {rows.map((row, index) => {
             if (row.type === 'heading') {
               return (
-                <Box key={row.key} marginTop={row.key === 'heading-default' ? 0 : 1}>
+                <Box key={row.key} marginTop={row.key === 'heading-vanilla' ? 0 : 1}>
                   <Text dimColor>{row.label}</Text>
                 </Box>
               );

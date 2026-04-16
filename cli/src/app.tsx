@@ -265,7 +265,7 @@ export function App({ flags }: AppProps) {
       }
 
       const initialFramework =
-        availableFrameworks.find((framework) => framework.id === 'default') ||
+        availableFrameworks.find((framework) => framework.id === 'vanilla') ||
         availableFrameworks[0];
 
       const detectedFramework = await detectCurrentFramework(availableFrameworks);
