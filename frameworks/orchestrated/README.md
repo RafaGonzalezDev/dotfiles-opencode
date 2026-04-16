@@ -1,4 +1,4 @@
-# OpenCode Framework
+# OpenCode Orchestrated Framework
 
 This directory contains the shared OpenCode configuration that the CLI installs
 into `~/.config/opencode/`.
@@ -14,10 +14,10 @@ across different repositories and team structures:
 
 ## Main pieces
 
-- [`AGENTS.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/AGENTS.md) defines the main operating rules
-- [`opencode.json`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/opencode.json) contains the OpenCode configuration
-- [`agents/`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/agents) contains the reusable agent prompts
-- [`skills/`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/skills) contains the transversal skills that support the base workflow
+- [`AGENTS.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/AGENTS.md) defines the main operating rules
+- [`opencode.json`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/opencode.json) contains the OpenCode configuration
+- [`agents/`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/agents) contains the reusable agent prompts
+- [`skills/`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/skills) contains the transversal skills that support the base workflow
 
 ## Agent structure
 
@@ -49,7 +49,7 @@ Typical flow:
 
 ## Diagram
 
-![Agentic Workflow Diagram](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/opencode_agentic_workflow.svg)
+![Agentic Workflow Diagram](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/opencode_agentic_workflow.svg)
 
 ## Core skills
 
@@ -66,7 +66,7 @@ be treated as optional extensions, not as part of the default core.
 
 ## When to edit this directory
 
-Update files inside `frameworks/default/` when you want to change the shared framework itself:
+Update files inside `frameworks/orchestrated/` when you want to change the shared framework itself:
 
 - add or refine agent instructions
 - update shared core skills

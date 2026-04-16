@@ -1,7 +1,7 @@
-# OpenCode Blueprint-Build Framework
+# OpenCode Blueprint Framework
 
 This framework provides a shareable blueprint profile built from the same
-working style as `custom-build`, but with a lighter operating model.
+working style as `orchestrated`, but with a lighter operating model.
 
 ## Overview
 
@@ -26,10 +26,10 @@ This profile keeps normal implementation work fluid while preserving core safety
 
 ## Main pieces
 
-- [AGENTS.md](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/AGENTS.md) defines the shared operating guidance
-- [opencode.json](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/opencode.json) contains the OpenCode configuration
-- [agents/](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/agents) contains the three core agent prompts
-- [skills/](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/skills) contains the single illustrative skill shipped with the blueprint
+- [AGENTS.md](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/AGENTS.md) defines the shared operating guidance
+- [opencode.json](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/opencode.json) contains the OpenCode configuration
+- [agents/](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/agents) contains the three core agent prompts
+- [skills/](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/skills) contains the single illustrative skill shipped with the blueprint
 
 ## Agent structure
 

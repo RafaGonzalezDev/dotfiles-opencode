@@ -3,7 +3,7 @@
 This framework keeps the OpenCode setup intentionally minimal.
 
 It exists so the installer can configure a valid managed OpenCode environment
-without imposing the shared team workflow from the `default` framework.
+without imposing a shared team workflow on top of the base OpenCode setup.
 
 ## Managed entries
 

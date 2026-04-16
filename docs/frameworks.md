@@ -1,36 +1,36 @@
 # Framework Catalog
 
-## Default framework
+## Vanilla framework
 
-The `frameworks/default/` profile is a minimal installable framework so the setup CLI
+The `frameworks/vanilla/` profile is a minimal installable framework so the setup CLI
 can offer a plain OpenCode experience.
 
 ### Files
 
-- `frameworks/default/AGENTS.md`
-- `frameworks/default/opencode.json`
-- `frameworks/default/README.md`
-- `frameworks/default/agents/`
-- `frameworks/default/skills/`
+- `frameworks/vanilla/AGENTS.md`
+- `frameworks/vanilla/opencode.json`
+- `frameworks/vanilla/README.md`
+- `frameworks/vanilla/agents/`
+- `frameworks/vanilla/skills/`
 
 ### Why
 
 The installer uses a strict framework contract with required entries
 `AGENTS.md`, `opencode.json`, `agents/`, and `skills/`.
 
-`frameworks/default/` now serves as the minimal baseline profile.
+`frameworks/vanilla/` now serves as the minimal baseline profile.
 
-## Custom-build framework
+## Orchestrated framework
 
-Added `frameworks/custom-build/` to preserve the richer agentic workflow as a
+Added `frameworks/orchestrated/` to preserve the richer agentic workflow as a
 separate installable profile.
 
-This keeps a minimal `default` framework available while allowing users to pick
-the more opinionated custom setup explicitly from the installer.
+This keeps a minimal `vanilla` framework available while allowing users to pick
+the more opinionated orchestrated setup explicitly from the installer.
 
-## Manual-build framework
+## Autonomous framework
 
-The `frameworks/manual-build/` profile is the high-autonomy variant for teams
+The `frameworks/autonomous/` profile is the high-autonomy variant for teams
 that want the main agents to work directly in a single thread.
 
 ### Why
@@ -43,10 +43,10 @@ This profile intentionally differs from stricter orchestration-heavy setups:
 - destructive commands, long-running dev servers, privileged escalation, and
   automatic subagent dispatch stay restricted through explicit permission rules
 
-## Blueprint-build framework
+## Blueprint framework
 
-The `frameworks/blueprint-build/` profile is a shareable baseline template
-derived from the same working style as `custom-build`, but simplified for lower
+The `frameworks/blueprint/` profile is a shareable baseline template
+derived from the same working style as `orchestrated`, but simplified for lower
 friction.
 
 ### Why

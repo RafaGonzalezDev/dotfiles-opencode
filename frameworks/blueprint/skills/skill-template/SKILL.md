@@ -6,7 +6,7 @@ description: Use when the user needs to understand what an OpenCode skill is, ho
 # Skill Template
 
 Use this skill when the task is to explain, design, or scaffold a skill for
-OpenCode starting from `frameworks/blueprint-build/`.
+OpenCode starting from `frameworks/blueprint/`.
 
 ## What a skill is
 

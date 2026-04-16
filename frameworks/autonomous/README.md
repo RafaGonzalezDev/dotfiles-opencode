@@ -1,4 +1,4 @@
-# OpenCode Framework
+# OpenCode Autonomous Framework
 
 This directory contains the shared OpenCode configuration that the CLI installs
 into `~/.config/opencode/`.
@@ -29,10 +29,10 @@ OpenCode built-in defaults while preserving a few explicit safety rails:
 
 ## Main pieces
 
-- [`AGENTS.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/AGENTS.md) defines the main operating rules
-- [`opencode.json`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/opencode.json) contains the OpenCode configuration
-- [`agents/`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/agents) contains the reusable agent prompts
-- [`skills/`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/skills) contains the transversal skills that support the base workflow
+- [`AGENTS.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/AGENTS.md) defines the main operating rules
+- [`opencode.json`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/opencode.json) contains the OpenCode configuration
+- [`agents/`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/agents) contains the reusable agent prompts
+- [`skills/`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/skills) contains the transversal skills that support the base workflow
 
 ## Agent structure
 
@@ -65,7 +65,7 @@ Typical flow:
 
 ## Diagram
 
-![Agentic Workflow Diagram](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/opencode_agentic_workflow.svg)
+![Agentic Workflow Diagram](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/opencode_agentic_workflow.svg)
 
 ## Core skills
 
@@ -82,7 +82,7 @@ be treated as optional extensions, not as part of the default core.
 
 ## When to edit this directory
 
-Update files inside `frameworks/manual-build/` when you want to change the shared framework itself:
+Update files inside `frameworks/autonomous/` when you want to change the shared framework itself:
 
 - add or refine agent instructions
 - update shared core skills

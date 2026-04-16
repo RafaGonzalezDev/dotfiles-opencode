@@ -64,19 +64,19 @@ Backups and restores are limited to that same set, and backups include metadata 
 
 - [`frameworks/`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks) contains the installable OpenCode frameworks
 - [`cli/`](/Users/rafa/workspace/personal/dotfiles-opencode/cli) contains the interactive installer
-- [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md) explains the minimal default framework
-- [`frameworks/custom-build/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/custom-build/README.md) explains the custom-build framework
-- [`frameworks/manual-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/README.md) explains the manual-build framework
-- [`frameworks/blueprint-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/README.md) explains the blueprint-build framework
+- [`frameworks/vanilla/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/vanilla/README.md) explains the minimal vanilla framework
+- [`frameworks/orchestrated/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/README.md) explains the orchestrated framework
+- [`frameworks/autonomous/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/README.md) explains the autonomous framework
+- [`frameworks/blueprint/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/README.md) explains the blueprint framework
 
 ## Framework documentation
 
-If you want to understand how the agentic workflow is organized, how the agents are split, and what the configuration inside `opencode/` is doing, see:
+If you want to understand how the agentic workflow is organized, how the agents are split, and what each framework profile is doing, see:
 
-- [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md)
-- [`frameworks/custom-build/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/custom-build/README.md)
-- [`frameworks/manual-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/README.md)
-- [`frameworks/blueprint-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/README.md)
+- [`frameworks/vanilla/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/vanilla/README.md)
+- [`frameworks/orchestrated/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/README.md)
+- [`frameworks/autonomous/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/README.md)
+- [`frameworks/blueprint/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/README.md)
 
 ## Manual installation
 
