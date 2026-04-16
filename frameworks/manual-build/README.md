@@ -39,17 +39,17 @@ OpenCode built-in defaults while preserving a few explicit safety rails:
 The configuration is organized around two layers:
 
 - Primary agents: planning and execution
-- Specialized agents: optional exploration, implementation support, testing, debugging, and review
+- Specialized subagents: `explorer`, `worker`, `tester`, `debugger`, and `reviewer`
 
 Current agent files:
 
 - `agents/plan.md`
 - `agents/build.md`
-- `agents/explore.md`
-- `agents/general.md`
-- `agents/testing.md`
-- `agents/debug.md`
-- `agents/review.md`
+- `agents/explorer.md`
+- `agents/worker.md`
+- `agents/tester.md`
+- `agents/debugger.md`
+- `agents/reviewer.md`
 
 ## Workflow
 
@@ -61,7 +61,7 @@ Typical flow:
 4. Run tests and validate behavior
 5. Debug failures when needed
 6. Review the result before closing
-7. Use a specialized agent only if the user explicitly requests one
+7. Use a specialized subagent only if the user explicitly requests one
 
 ## Diagram
 

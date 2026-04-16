@@ -9,43 +9,43 @@ The framework follows a plan-first, delegate-oriented workflow designed to work
 across different repositories and team structures:
 
 - planning and orchestration stay separated from implementation
-- specialized agents handle exploration, building, testing, debugging, and review
+- specialized subagents handle exploration, implementation, testing, debugging, and review
 - feedback loops are built into the workflow so teams can iterate safely
 
 ## Main pieces
 
-- [`AGENTS.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/AGENTS.md) defines the main operating rules
-- [`opencode.json`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/opencode.json) contains the OpenCode configuration
-- [`agents/`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/agents) contains the reusable agent prompts
-- [`skills/`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/skills) contains the transversal skills that support the base workflow
+- [`AGENTS.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/AGENTS.md) defines the main operating rules
+- [`opencode.json`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/opencode.json) contains the OpenCode configuration
+- [`agents/`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/agents) contains the reusable agent prompts
+- [`skills/`](/home/rafa/workspace/dotfiles-opencode/frameworks/custom-build/skills) contains the transversal skills that support the base workflow
 
 ## Agent structure
 
 The configuration is organized around two layers:
 
 - Primary agents: orchestration and planning
-- Specialized agents: exploration, implementation, testing, debugging, and review
+- Specialized subagents: `explorer`, `worker`, `tester`, `debugger`, and `reviewer`
 
 Current agent files:
 
 - `agents/plan.md`
 - `agents/build.md`
-- `agents/explore.md`
-- `agents/general.md`
-- `agents/testing.md`
-- `agents/debug.md`
-- `agents/review.md`
+- `agents/explorer.md`
+- `agents/worker.md`
+- `agents/tester.md`
+- `agents/debugger.md`
+- `agents/reviewer.md`
 
 ## Workflow
 
 Typical flow:
 
 1. Plan the work
-2. Explore the codebase when facts are missing
-3. Implement changes
-4. Run tests and validate behavior
-5. Debug failures when needed
-6. Review the result before closing
+2. Use `explorer` when facts are missing
+3. Implement changes through `worker`
+4. Run tests and validate behavior through `tester`
+5. Debug failures through `debugger` when needed
+6. Review the result through `reviewer` before closing
 
 ## Diagram
 

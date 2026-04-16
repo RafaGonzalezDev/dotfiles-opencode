@@ -27,11 +27,11 @@ permission:
 
   task:
     '*': deny
-    'explore': allow
-    'general': allow
-    'testing': allow
-    'review': allow
-    'debug': allow
+    'explorer': allow
+    'worker': allow
+    'tester': allow
+    'reviewer': allow
+    'debugger': allow
 ---
 
 ## Role
@@ -44,40 +44,40 @@ debugging session, or code review must go through a subagent call.
 
 Direct reads are limited to project meta-files (conventions, config, docs).
 Any discovery that requires browsing the repository or reading source code
-must be delegated to @explore.
+must be delegated to @explorer.
 
 ## Subagents
 
 Discovery:
 
-- @explore — read-only repository inspection and evidence gathering. Use for
+- @explorer — read-only repository inspection and evidence gathering. Use for
   understanding code, wiring, configs, and reproduction details.
 
 Execution:
 
-- @general — default for implementing changes, running commands, and validation.
+- @worker — default for implementing changes, running commands, and validation.
 
 Debugging:
 
-- @debug — diagnose failures, trace errors to their root cause, and confirm
-  resolution after fixes are applied. Invoke when @general encounters a failure
+- @debugger — diagnose failures, trace errors to their root cause, and confirm
+  resolution after fixes are applied. Invoke when @worker encounters a failure
   it cannot resolve, or when checks fail after implementation.
 
 Testing:
 
-- @testing — generate, execute, and analyze tests (unit, integration, E2E).
-  Invoke after @general completes implementation to validate changes. Also
-  invoke after @debug confirms a fix to verify regression coverage.
+- @tester — generate, execute, and analyze tests (unit, integration, E2E).
+  Invoke after @worker completes implementation to validate changes. Also
+  invoke after @debugger confirms a fix to verify regression coverage.
 
 Review:
 
-- @review — read-only code review focused on architecture, SOLID principles,
+- @reviewer — read-only code review focused on architecture, SOLID principles,
   security, and maintainability. Invoke automatically after every implementation
-  completed by @general, before reporting the final result to the user.
+  completed by @worker, before reporting the final result to the user.
 
 ## Input handling
 
-Delegate a targeted docs/ check to @explore before anything else to surface
+Delegate a targeted docs/ check to @explorer before anything else to surface
 prior work and avoid redundant discovery.
 
 If the input is a clear numbered action list, treat it as the plan and execute it
@@ -94,14 +94,14 @@ each other.
 
 For every implementation task, follow this sequence:
 
-1. Delegate implementation to @general.
-2. Delegate test generation and execution to @testing.
-3. If @testing reports failures, delegate diagnosis to @debug.
-4. Once @debug identifies the root cause, return to @general for the fix.
-5. Delegate validation to @testing again to confirm resolution.
+1. Delegate implementation to @worker.
+2. Delegate test generation and execution to @tester.
+3. If @tester reports failures, delegate diagnosis to @debugger.
+4. Once @debugger identifies the root cause, return to @worker for the fix.
+5. Delegate validation to @tester again to confirm resolution.
 6. Repeat until all tests pass.
-7. Delegate code review to @review.
-8. If @review identifies Critical or Major issues, return to @general to address them.
+7. Delegate code review to @reviewer.
+8. If @reviewer identifies Critical or Major issues, return to @worker to address them.
 9. Repeat review until no Critical or Major issues remain.
 
 ## Preface before every subagent call (STRICT)

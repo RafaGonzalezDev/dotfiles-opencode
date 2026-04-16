@@ -32,35 +32,35 @@
         "atlassian*": true
       }
     },
-    "explore": {
+    "explorer": {
       "tools": {
         "playwright*": true,
         "context7*": true,
         "atlassian*": true
       }
     },
-    "general": {
+    "worker": {
       "tools": {
         "playwright*": true,
         "context7*": true,
         "atlassian*": true
       }
     },
-    "testing": {
+    "tester": {
       "tools": {
         "playwright*": true,
         "context7*": true,
         "atlassian*": true
       }
     },
-    "debug": {
+    "debugger": {
       "tools": {
         "playwright*": true,
         "context7*": true,
         "atlassian*": true
       }
     },
-    "review": {
+    "reviewer": {
       "tools": {
         "playwright*": true,
         "context7*": true,
