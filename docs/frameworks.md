@@ -42,3 +42,22 @@ This profile intentionally differs from stricter orchestration-heavy setups:
 - specialized agents remain available for explicit user-directed invocation
 - destructive commands, long-running dev servers, privileged escalation, and
   automatic subagent dispatch stay restricted through explicit permission rules
+
+## Blueprint-build framework
+
+The `frameworks/blueprint-build/` profile is a shareable baseline template
+derived from the same working style as `custom-build`, but simplified for lower
+friction.
+
+### Why
+
+This profile is intended for colleagues who should receive a useful starting
+point without inheriting the full orchestration model:
+
+- only three core agents are included: `plan`, `build`, and `explorer`
+- `build` works directly in the main thread with broad implementation permissions
+- `plan` and `explorer` stay read-only and purpose-specific
+- explicit delegation through `@agent` is documented as an available option,
+  not as a required default workflow
+- an illustrative skill shows how teams can extend the blueprint without
+  changing its core structure

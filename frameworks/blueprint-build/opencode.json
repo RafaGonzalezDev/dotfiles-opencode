@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest", "--browser", "chrome", "--viewport-size", "1920x1080"],
+      "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"],
+      "enabled": true
+    }
+  },
+  "agent": {
+    "plan": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true
+      }
+    },
+    "build": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true
+      }
+    },
+    "explorer": {
+      "tools": {
+        "playwright*": true,
+        "context7*": true
+      }
+    }
+  }
+}

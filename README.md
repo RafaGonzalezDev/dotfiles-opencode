@@ -66,6 +66,8 @@ Backups and restores are limited to that same set, and backups include metadata 
 - [`cli/`](/Users/rafa/workspace/personal/dotfiles-opencode/cli) contains the interactive installer
 - [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md) explains the minimal default framework
 - [`frameworks/custom-build/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/custom-build/README.md) explains the custom-build framework
+- [`frameworks/manual-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/README.md) explains the manual-build framework
+- [`frameworks/blueprint-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/README.md) explains the blueprint-build framework
 
 ## Framework documentation
 
@@ -73,6 +75,8 @@ If you want to understand how the agentic workflow is organized, how the agents 
 
 - [`frameworks/default/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/default/README.md)
 - [`frameworks/custom-build/README.md`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks/custom-build/README.md)
+- [`frameworks/manual-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/manual-build/README.md)
+- [`frameworks/blueprint-build/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint-build/README.md)
 
 ## Manual installation
 
