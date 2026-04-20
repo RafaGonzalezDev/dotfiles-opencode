@@ -12,7 +12,7 @@ thread by default:
 - planning and execution remain distinct responsibilities
 - plan can inspect the repository directly without editing it
 - the primary build flow inspects, implements, validates, debugs, and reviews directly
-- specialized agents stay available only when the user explicitly asks to use one
+- specialized agents remain available, but their use is normally introduced by the user's instructions during the conversation
 - feedback loops are built into the workflow so teams can iterate safely
 
 ## Permissions model
@@ -23,9 +23,9 @@ OpenCode built-in defaults while preserving a few explicit safety rails:
 - `build` has direct read, edit, search, and bash access for normal implementation work
 - `plan` has direct repository inspection access but cannot edit files
 - both primary agents block destructive commands, long-running dev servers,
-  privileged escalation, and automatic subagent invocation
-- direct user invocation of a specialized agent remains available through the
-  normal `@agent` flow supported by OpenCode
+  privileged escalation, and proactive subagent orchestration by the model
+- specialized agents can still be invoked through the normal `@agent` flow,
+  with the expectation that the user will indicate when that interaction should happen
 
 ## Main pieces
 
@@ -61,7 +61,7 @@ Typical flow:
 4. Run tests and validate behavior
 5. Debug failures when needed
 6. Review the result before closing
-7. Use a specialized subagent only if the user explicitly requests one
+7. Use a specialized subagent when the user steers the conversation toward that interaction
 
 ## Diagram
 
