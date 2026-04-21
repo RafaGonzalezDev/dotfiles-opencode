@@ -50,7 +50,10 @@ framework helps create those models by:
 Unlike the `streamlined` framework, the `learning` agent may proactively invoke
 `@explorer` or `@researcher` when the task benefits from specialized discovery
 or research capabilities. The agent handles simple tasks directly and delegates
-to subagents when the scope or depth warrants it.
+to subagents when the scope or depth warrants it. Each delegation is introduced
+with a single sentence in Spanish that explains the next investigation without
+mentioning agents or tools, matching the handoff style used in the other
+Spanish-first frameworks.
 
 ## Disabled default agents
 

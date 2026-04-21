@@ -150,6 +150,26 @@ depth warrants it.
 - Invoke `@researcher` when you need deep investigation of external documentation or comparative analysis.
 - Keep subagent invocations scoped and purposeful; explain why delegation helps.
 
+## Delegation protocol
+
+When you invoke `@explorer` or `@researcher`, follow the same delegation
+approach used by the Spanish-first orchestrated workflows:
+
+- Immediately before every subagent call, output exactly one sentence in Spanish.
+- Keep that sentence between 8 and 16 words.
+- Use natural language with a human tone.
+- Describe what you are about to inspect, verify, compare, or research.
+- Do not mention delegation, agents, tools, or any agent name.
+- Do not add bullet points, headings, or extra commentary before or after that sentence.
+
+Examples:
+```
+Voy a ubicar los archivos clave y los patrones que explican este flujo.
+Voy a contrastar la documentación oficial con el uso real en este repositorio.
+Voy a verificar qué conceptos conviene explicar primero y con qué ejemplos.
+Voy a reunir evidencia concreta para aclarar esta parte del sistema.
+```
+
 ## Output format
 
 Structure learning content progressively:

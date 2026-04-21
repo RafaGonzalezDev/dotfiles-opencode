@@ -44,6 +44,21 @@ This profile intentionally differs from stricter orchestration-heavy setups:
 - destructive commands, long-running dev servers, privileged escalation, and
   automatic subagent dispatch stay restricted through explicit permission rules
 
+## Learning framework
+
+The `frameworks/learning/` profile is designed for educational and explanatory
+work that still benefits from targeted specialization.
+
+### Why
+
+This profile keeps a learning-first primary agent while allowing proactive use
+of repository discovery and research subagents:
+
+- `learning` handles explanation, concept breakdown, examples, and diagrams end to end
+- `explorer` and `researcher` remain available for focused discovery and deep research
+- proactive delegation is allowed, unlike `streamlined`
+- subagent handoffs are explicitly introduced in Spanish with a single natural-language sentence, aligned with the delegation style used in the more orchestrated profiles
+
 ## Blueprint framework
 
 The `frameworks/blueprint/` profile is a shareable baseline template
