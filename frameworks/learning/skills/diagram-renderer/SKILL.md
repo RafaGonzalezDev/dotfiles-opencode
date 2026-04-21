@@ -1,53 +1,73 @@
 ---
 name: diagram-renderer
-description: Use this skill whenever the user asks for a diagram, flowchart, architecture diagram, structural diagram, or any visual explanation of how something is organised or how it works. Triggers include explicit requests ("draw a diagram", "visualise this flow", "show me the architecture"), and also implicit cases where a diagram would clarify better than prose (a request lifecycle, a system's components, a decision tree, a containment hierarchy). Produces SVG diagrams following a strict visual system: orthogonal connectors only (no diagonals), rounded rectangular nodes, two-weight typography, a flat fill-and-stroke aesthetic, and a curated palette where colour encodes meaning rather than sequence. Only nodes carry backgrounds; containers, legends, and the canvas itself are transparent. Do NOT use for data charts, UI mockups, illustrative cross-sections, or full ER diagrams with cardinality.
+description: Use this skill whenever the user asks for a diagram, flowchart, architecture diagram, structural diagram, or any visual explanation of how something is organised or how it works. Triggers include explicit requests ("draw a diagram", "visualise this flow", "show me the architecture") and implicit ones where a diagram clarifies better than prose (a request lifecycle, a system's components, a decision tree, a containment hierarchy). Produces SVG diagrams with orthogonal connectors, rounded rectangular nodes, two-weight typography, a flat fill-and-stroke aesthetic, and a palette where colour encodes meaning. Only nodes carry backgrounds; containers, legends, and the canvas are transparent. Do NOT use for data charts, UI mockups, illustrative cross-sections, or full ER diagrams with cardinality.
 ---
 
 # diagram-renderer
 
-Produce diagrams as SVG. The goal is not "a diagram that works" — it is a diagram that looks like it was drawn by someone who cares about craft. Consistency across outputs matters more than individual cleverness.
+Produce SVG diagrams following the system below. One SVG shows one diagram at one level of detail — split multi-layer subjects into several SVGs with prose between them. A request like "architecture + flow + features in one" is several SVGs, not one poster.
 
-## Principles
+## Shapes and layout
 
-Ordered. Earlier wins when they conflict.
+- Nodes are rounded rectangles, `rx="6"`, always. No pills, circles, hexagons, or diamonds. Decisions are a node plus two outgoing connectors labelled "yes"/"no".
+- Single-line node: height 48. Two-line (title + subtitle): height 60. Width = max(120, longest text + 32).
+- Place nodes on a grid: pick column centres and row centres first, then position nodes on intersections. Siblings in a row share width.
+- Spacing: ≥32px between siblings, ≥48px between rows/columns.
+- Layout defaults: flows top-to-bottom; trees top-to-bottom with parent above children; architectures layered (actors top/left, core middle, infra bottom/right); containment nested largest-outside.
 
-**1. Orthogonal geometry only.** Every connector is a straight horizontal line, a straight vertical line, or an L-shape with sharp 90° bends (U-shape when routing around obstacles). No diagonals, no curves, no "almost straight" segments — even a 4px drift counts.
+## Connectors
 
-Operational check, applied as you write each `d="..."`: in `M x1 y1 L x2 y2`, either `x1 == x2` (vertical) or `y1 == y2` (horizontal). If both change in a single `L`, it's a diagonal — route through an intermediate point: `M x1 y1 L xb y1 L xb y2 L x2 y2` or the vertical-first equivalent.
+All connectors are `<path class="conn"` or `class="conn-dashed"` with `marker-end="url(#arrow)"`. Solid for direct relationships, dashed for indirect/async/optional.
 
-**2. One SVG, one level of zoom.** A single SVG shows one diagram at one level of detail. If the subject needs "the big picture" *and* "how component X works inside", those are separate SVGs with prose between them. No stacked posters. Refuse "architecture + flow + features all in one" framings and produce several focused SVGs instead.
+Connector shapes — exactly these three forms, nothing else:
 
-**3. Grid-aligned layout.** Commit to column centres and row centres before placing anything. Every node centres on a grid intersection. L-bends occur at grid intersections too. If a pair is "almost" aligned, fix the grid — don't paper over it with a short diagonal.
-`
-**4. Colour encodes meaning, not position.** At most three accent ramps per diagram. Nodes sharing a semantic role share a ramp; structural/neutral nodes use the neutral ramp. Semantic ramps (warn/err) only when the node genuinely represents that state.
+- Straight vertical: `M x,y1 L x,y2`
+- Straight horizontal: `M x1,y L x2,y`
+- L-bend: `M x1,y1 L xb,y1 L xb,y2 L x2,y2` (horizontal first) or `M x1,y1 L x1,yb L x2,yb L x2,y2` (vertical first)
 
-Operational check: before assigning ramps, write one sentence per category naming what its members share. If the distinguishing sentence says "these come later in the flow" or "these are the second group", that's sequence — collapse into one category.
+Every `L` command matches its predecessor in either x or y. Two coordinates never change in the same segment — that would be a diagonal.
 
-**5. The diagram reads without labels.** Spatial arrangement carries meaning; labels annotate. If removing every `<text>` would leave it incomprehensible, the geometry isn't doing its job.
+Endpoints are always one of these four points on a node's rect `(x, y, w, h)`:
 
-**6. Restraint over completeness.** Ask of each node: does it teach the reader something the rest of the diagram doesn't already imply? If no, cut it. When the subject genuinely needs many nodes, split (principle 2).
+- Top edge: `(x + w/2, y)`
+- Bottom edge: `(x + w/2, y + h)`
+- Left edge: `(x, y + h/2)`
+- Right edge: `(x + w, y + h/2)`
 
-## Canvas
+A connector's first point and last point are both node-edge points. Endpoints never land in empty space, and they never sit inside a node's fill.
+
+If the direct path between two endpoints would cross a third node, route around it with a U-bend (two bends, three segments).
+
+## Colour
+
+At most three accent ramps per diagram. Nodes sharing a semantic role share a ramp. Structural and actor nodes use `cat-n` (neutral). Semantic ramps (`cat-warn`, `cat-err`) only when the node represents warning or error state.
+
+Assign by role, never by order. Five processing steps that do the same kind of work all take the same ramp. A node's ramp changes only when its role changes.
+
+Categories: `cat-a` primary work, `cat-b` secondary/counterpart, `cat-c` third (rare), `cat-n` neutral, `cat-warn`, `cat-err`.
+
+## Canvas and tokens
 
 ```
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 W H" role="img">
   <title>...</title><desc>...</desc>
-  <defs>...</defs>
-  ...
+  <defs>
+    <style>/* tokens below */</style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M1,1 L9,5 L1,9" fill="none" stroke="context-stroke"
+            stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <!-- containers, connectors, nodes -->
 </svg>
 ```
 
-`W` is 720–880. `H` = bottom of lowest element + 32px. Background transparent. 32px safe margin on all sides. `<title>` and `<desc>` come first and are written for a screen reader.
+`W` is 720–880. `H` = bottom edge of the lowest element + 32px. Background transparent. 32px safe margin on all sides. Text in the diagram follows the user's language; identifiers like `index.ts` stay in native form.
 
-## Titles and language
+Paint order inside the SVG: containers → connectors → nodes. Nodes last so their rects terminate connectors cleanly at the edge.
 
-Titles can go inside the SVG or in the response prose — pick by context. Inside when the diagram stands alone as a deliverable; in prose when the response already introduces it. When inside, one title maximum, use class `t` (or a one-off `font-size` with weight 500, never 600+), top-centred within the safe margin.
-
-Text in the diagram follows the user's language. Don't mix. Technical identifiers (`index.ts`, `AGENTS.md`) keep their native form.
-
-## Design tokens
-
-One `<style>` block in `<defs>`, this is the entire palette and typography system:
+Style block (the entire palette and typography):
 
 ```
 <style>
@@ -86,110 +106,47 @@ One `<style>` block in `<defs>`, this is the entire palette and typography syste
 </style>
 ```
 
-Do not introduce colours, fonts, or stroke widths outside this block. No inline `style="..."` on text. Three sizes (14/12/11px), two weights (400/500), sentence case everywhere except the uppercased `.label` class.
+Three text sizes (14/12/11px), two weights (400/500), sentence case. No colours, fonts, or stroke widths outside this block. No inline `style="..."` on text.
 
-## Nodes
+## Element patterns
 
-Rounded rectangles only. Nodes are the sole elements that carry a fill.
-
-- **Single-line**: height 48, width = max(120, text_width + 32), `rx="6"`.
-- **Two-line** (title + subtitle): height 60, `rx="6"`. Title at centre-8, subtitle at centre+9, both `text-anchor="middle"` and `dominant-baseline="central"`.
-- Actors, terminators (start/end), and anything else that might tempt a pill shape are still rectangles with `rx="6"`. Differentiate them from processing nodes by category (`cat-n` for neutral actors) and position, not by shape.
-- **No decision diamonds.** Express a decision as a node + two outgoing connectors labelled "yes"/"no".
-- **No pills, no circles, no hexagons.** `rx="6"` is the only radius.
-
-Template:
+Node:
 
 ```
 <g class="node cat-a">
   <rect class="fill stroke" x="..." y="..." width="..." height="48" rx="6"/>
-  <text class="t ink" x="..." y="..." text-anchor="middle" dominant-baseline="central">Label</text>
+  <text class="t ink" x="cx" y="cy" text-anchor="middle" dominant-baseline="central">Label</text>
 </g>
 ```
 
-Categories: `cat-a` (primary work), `cat-b` (secondary), `cat-c` (third, rare), `cat-n` (neutral/structural), `cat-warn`, `cat-err`.
+For a two-line node, use two `<text>` elements: title at `y = cy - 8` with `class="t ink"`, subtitle at `y = cy + 9` with `class="ts ink"`.
 
-## Containers
-
-Group nodes visually. **No fill — transparent only.** Dashed border, nothing more.
+Container (groups nodes visually, no fill):
 
 ```
 <rect x="..." y="..." width="..." height="..." rx="10"
       fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
-<text class="label" x="..." y="...">Label at top-left, offset 14 right 20 down from corner</text>
+<text class="label" x="container_x + 14" y="container_y + 20">Section name</text>
 ```
 
-Padding inside: 24px minimum between container edge and any child. Maximum two nesting levels. Flows entering or exiting a container should be deliberate (one clear entry, one clear exit), not incidental.
+Padding inside a container: ≥24px between its border and any child. Maximum two nesting levels.
 
-## Connectors
-
-All connectors are `<path>` with `fill="none"` (implicit via `.conn*` classes).
-
-- Straight: `M x1 y1 L x2 y2` where one coordinate matches.
-- L-bend: `M x1 y1 L xb y1 L xb y2 L x2 y2` (horizontal-first) or vertical-first.
-- U-bend: three segments, two 90° bends.
-
-**Endpoints anchor to the exact border of a node**, never to its centre and never into its interior. Compute the anchor from the node's rect `(x, y, w, h)`:
-
-- Entering from the top: anchor = `(x + w/2, y)`
-- Leaving from the bottom: anchor = `(x + w/2, y + h)`
-- Entering from the left: anchor = `(x, y + h/2)`
-- Leaving from the right: anchor = `(x + w, y + h/2)`
-
-A connector between two nodes has exactly two anchors, one per node. Pick the side of each node that matches the connector's direction (top-to-bottom flow → leave source from bottom, enter target from top). Never route a connector *through* a node: if the straight path from source anchor to target anchor would cross a third node's rect, reroute with a U-bend around it.
-
-Operational check, before writing `d="..."`: both the first `M` point and the last `L` point must lie on the border of an existing node's rect. A connector whose endpoint doesn't coincide with any node border is an orphan — it points at empty space — and must be fixed at the design step, not by nudging coordinates.
-
-Solid `.conn` for direct relationships, `.conn-dashed` for indirect/async/optional. Arrowhead marker defined once in `<defs>`:
-
-```
-<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
-        markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-  <path d="M1 1 L 9 5 L 1 9" fill="none" stroke="context-stroke"
-        stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-</marker>
-```
-
-`context-stroke` lets the head inherit the line's colour. Connector labels are rare; when needed, place them next to the bend, not floating on a segment midpoint.
-
-## Legends
-
-Optional. When colour categories are self-evident from the diagram's structure, skip the legend entirely.
-
-When included: below the diagram, separated by ≥32px, **no background fill, no border** — just the swatches and labels floating in the canvas. Each entry is a 12×12 `rx="3"` rect wrapped in `<g class="cat-X">` with the rect itself carrying `class="fill stroke"` (the ramp only applies through the child classes, a bare `cat-X` on the rect will render black). Label 6px to the right, `class="ts"`, vertically centred. Only legend categories that actually appear in the diagram.
-
-Example:
+Legend entry (no surrounding background, no border):
 
 ```
 <g class="cat-a">
-  <rect class="fill stroke" x="60" y="400" width="12" height="12" rx="3"/>
+  <rect class="fill stroke" x="..." y="..." width="12" height="12" rx="3"/>
 </g>
-<text class="ts" x="78" y="409" dominant-baseline="central">Primary work</text>
+<text class="ts" x="swatch_x + 18" y="swatch_y + 6" dominant-baseline="central">Category name</text>
 ```
 
-## Layout defaults
+Note: the `cat-X` class applies colour only through child classes `.fill` and `.stroke`. A bare `cat-X` on a rect renders black.
 
-Deviate when the subject demands it.
-
-- **Flows**: top-to-bottom; left-to-right works for 3–4 short stages.
-- **Trees, hierarchies, decompositions**: top-to-bottom, parent above children.
-- **Architectures**: layered — external actors at top/left, core in middle, infrastructure at bottom/right.
-- **Containment**: nested containers, largest outside.
-- Spacing: ≥32px between siblings on the same axis, ≥48px between rows/columns. Consistent node widths within a row signal peer relationships.
-
-## Workflow
-
-1. Identify the diagram's job (flow / architecture / decomposition / containment).
-2. Decide scope: one SVG or several. Split when the subject naturally splits (principle 2).
-3. List nodes with titles, optional ≤5-word subtitles, and categories. Run the colour check (principle 4) before assigning ramps.
-4. List connections as source → target, solid or dashed.
-5. Commit to a grid: column centres, row centres.
-6. Write the SVG: `<defs>` (style + arrow marker) → containers → connectors → nodes. Nodes come **last** so their rects visually terminate the connectors at a clean edge; connectors painted on top of nodes produce visible strokes crossing the node fill. Run the diagonal check (principle 1) and the endpoint-anchor check (see Connectors) on each path as you write its `d`.
-7. Verify: viewBox height = (bottom edge of lowest element) + 32px. Count from the actual lowest rect/text in the SVG, not from an estimate — a truncated diagram with content clipped at the bottom is a common failure. Every `<text>` has a class; no diagonals; no orphan connectors; no colour outside tokens; no inline `style=`; no container or legend has a fill.
+Legends are optional. Include one only when the category mapping is not obvious from the node labels themselves.
 
 ## Minimal example
 
-Three nodes, one dashed side-channel. Demonstrates: a neutral actor (client), two processing nodes sharing category A (same role), a sink in category B (different kind of thing), a dashed vertical connector that needs no L-bend because source and target share a column.
+Three processing nodes, one neutral actor, one side-channel sink. Category A repeats because Gateway and Service share a role. The dashed connector to Audit log is a single vertical line because the target sits directly below the source — the grid earns that.
 
 ```
 <g class="node cat-n">
@@ -208,26 +165,11 @@ Three nodes, one dashed side-channel. Demonstrates: a neutral actor (client), tw
   <rect class="fill stroke" x="536" y="132" width="128" height="32" rx="6"/>
   <text class="ts ink" x="600" y="148" text-anchor="middle" dominant-baseline="central">Audit log</text>
 </g>
-<path class="conn" d="M 180 80 L 296 80" marker-end="url(#arrow)"/>
-<path class="conn" d="M 424 80 L 536 80" marker-end="url(#arrow)"/>
-<path class="conn-dashed" d="M 600 104 L 600 132" marker-end="url(#arrow)"/>
+<path class="conn" d="M 180,80 L 296,80" marker-end="url(#arrow)"/>
+<path class="conn" d="M 424,80 L 536,80" marker-end="url(#arrow)"/>
+<path class="conn-dashed" d="M 600,104 L 600,132" marker-end="url(#arrow)"/>
 ```
 
-## What to refuse
+## Out of scope
 
-- Data charts, UI mockups, illustrative cross-sections, full ERDs with cardinality markers: decline, wrong skill.
-- Single-SVG posters covering multiple levels of detail: decline the framing, produce several focused SVGs.
-
-## Non-negotiables
-
-- No diagonals. No curves. No rounded bends on connectors.
-- Every connector endpoint anchors exactly to the border of an existing node. No orphan connectors pointing at empty space.
-- Paint order is containers → connectors → nodes. Nodes on top.
-- One SVG per level of zoom.
-- Only nodes carry fills. Containers, legends, and the canvas are transparent.
-- No colour, font, or stroke width outside the token block.
-- No inline `style=` overriding typography.
-- No text below 11px. No Title Case or ALL CAPS outside `.label`.
-- No `<text>` without `t` / `ts` / `label`.
-- No element outside the 32px safe margin.
-- No decision diamonds, no pills, no circles, no gradients, no shadows, no glow, no 3D. `rx="6"` is the only node radius.
+Data charts, UI mockups, illustrative cross-sections, and full ERDs with cardinality markers: decline, wrong skill. Single-SVG posters that cover multiple levels of detail: decline and produce several focused SVGs instead.
