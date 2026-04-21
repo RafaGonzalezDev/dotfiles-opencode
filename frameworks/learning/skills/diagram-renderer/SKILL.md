@@ -18,7 +18,7 @@ Operational check, applied as you write each `d="..."`: in `M x1 y1 L x2 y2`, ei
 **2. One SVG, one level of zoom.** A single SVG shows one diagram at one level of detail. If the subject needs "the big picture" *and* "how component X works inside", those are separate SVGs with prose between them. No stacked posters. Refuse "architecture + flow + features all in one" framings and produce several focused SVGs instead.
 
 **3. Grid-aligned layout.** Commit to column centres and row centres before placing anything. Every node centres on a grid intersection. L-bends occur at grid intersections too. If a pair is "almost" aligned, fix the grid — don't paper over it with a short diagonal.
-
+`
 **4. Colour encodes meaning, not position.** At most three accent ramps per diagram. Nodes sharing a semantic role share a ramp; structural/neutral nodes use the neutral ramp. Semantic ramps (warn/err) only when the node genuinely represents that state.
 
 Operational check: before assigning ramps, write one sentence per category naming what its members share. If the distinguishing sentence says "these come later in the flow" or "these are the second group", that's sequence — collapse into one category.
@@ -129,7 +129,18 @@ All connectors are `<path>` with `fill="none"` (implicit via `.conn*` classes).
 - L-bend: `M x1 y1 L xb y1 L xb y2 L x2 y2` (horizontal-first) or vertical-first.
 - U-bend: three segments, two 90° bends.
 
-Endpoints stop at the node edge, not the centre. Solid `.conn` for direct relationships, `.conn-dashed` for indirect/async/optional. Arrowhead marker defined once in `<defs>`:
+**Endpoints anchor to the exact border of a node**, never to its centre and never into its interior. Compute the anchor from the node's rect `(x, y, w, h)`:
+
+- Entering from the top: anchor = `(x + w/2, y)`
+- Leaving from the bottom: anchor = `(x + w/2, y + h)`
+- Entering from the left: anchor = `(x, y + h/2)`
+- Leaving from the right: anchor = `(x + w, y + h/2)`
+
+A connector between two nodes has exactly two anchors, one per node. Pick the side of each node that matches the connector's direction (top-to-bottom flow → leave source from bottom, enter target from top). Never route a connector *through* a node: if the straight path from source anchor to target anchor would cross a third node's rect, reroute with a U-bend around it.
+
+Operational check, before writing `d="..."`: both the first `M` point and the last `L` point must lie on the border of an existing node's rect. A connector whose endpoint doesn't coincide with any node border is an orphan — it points at empty space — and must be fixed at the design step, not by nudging coordinates.
+
+Solid `.conn` for direct relationships, `.conn-dashed` for indirect/async/optional. Arrowhead marker defined once in `<defs>`:
 
 ```
 <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -145,7 +156,16 @@ Endpoints stop at the node edge, not the centre. Solid `.conn` for direct relati
 
 Optional. When colour categories are self-evident from the diagram's structure, skip the legend entirely.
 
-When included: below the diagram, separated by ≥32px, **no background fill, no border** — just the swatches and labels floating in the canvas. Each entry is a 12×12 `rx="3"` rect with the appropriate `cat-X` class, followed 6px right by a `class="ts"` label, vertically centred. Only legend categories that actually appear.
+When included: below the diagram, separated by ≥32px, **no background fill, no border** — just the swatches and labels floating in the canvas. Each entry is a 12×12 `rx="3"` rect wrapped in `<g class="cat-X">` with the rect itself carrying `class="fill stroke"` (the ramp only applies through the child classes, a bare `cat-X` on the rect will render black). Label 6px to the right, `class="ts"`, vertically centred. Only legend categories that actually appear in the diagram.
+
+Example:
+
+```
+<g class="cat-a">
+  <rect class="fill stroke" x="60" y="400" width="12" height="12" rx="3"/>
+</g>
+<text class="ts" x="78" y="409" dominant-baseline="central">Primary work</text>
+```
 
 ## Layout defaults
 
@@ -164,8 +184,8 @@ Deviate when the subject demands it.
 3. List nodes with titles, optional ≤5-word subtitles, and categories. Run the colour check (principle 4) before assigning ramps.
 4. List connections as source → target, solid or dashed.
 5. Commit to a grid: column centres, row centres.
-6. Write the SVG: `<defs>` (style + arrow marker) → containers → nodes → connectors on top. Run the diagonal check (principle 1) on each path as you write its `d`.
-7. Verify: viewBox height hugs content +32px; every `<text>` has a class; no diagonals; no colour outside tokens; no inline `style=`; no container or legend has a fill.
+6. Write the SVG: `<defs>` (style + arrow marker) → containers → connectors → nodes. Nodes come **last** so their rects visually terminate the connectors at a clean edge; connectors painted on top of nodes produce visible strokes crossing the node fill. Run the diagonal check (principle 1) and the endpoint-anchor check (see Connectors) on each path as you write its `d`.
+7. Verify: viewBox height = (bottom edge of lowest element) + 32px. Count from the actual lowest rect/text in the SVG, not from an estimate — a truncated diagram with content clipped at the bottom is a common failure. Every `<text>` has a class; no diagonals; no orphan connectors; no colour outside tokens; no inline `style=`; no container or legend has a fill.
 
 ## Minimal example
 
@@ -201,6 +221,8 @@ Three nodes, one dashed side-channel. Demonstrates: a neutral actor (client), tw
 ## Non-negotiables
 
 - No diagonals. No curves. No rounded bends on connectors.
+- Every connector endpoint anchors exactly to the border of an existing node. No orphan connectors pointing at empty space.
+- Paint order is containers → connectors → nodes. Nodes on top.
 - One SVG per level of zoom.
 - Only nodes carry fills. Containers, legends, and the canvas are transparent.
 - No colour, font, or stroke width outside the token block.
