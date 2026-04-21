@@ -1,4 +1,0 @@
-interface:
-  display_name: "UX Patterns"
-  short_description: "Apply proven UX interaction patterns and states."
-  default_prompt: "Improve this user flow using proven UX patterns."
