@@ -28,10 +28,11 @@ separate installable profile.
 This keeps a minimal `vanilla` framework available while allowing users to pick
 the more opinionated orchestrated setup explicitly from the installer.
 
-## Autonomous framework
+## Streamlined framework
 
-The `frameworks/autonomous/` profile is the high-autonomy variant for teams
-that want the main agents to work directly in a single thread.
+The `frameworks/streamlined/` profile is designed for teams that want the main
+agents to work directly in a single thread with explicit user control over
+subagent invocation.
 
 ### Why
 
@@ -39,7 +40,7 @@ This profile intentionally differs from stricter orchestration-heavy setups:
 
 - `build` can inspect, edit, and validate directly
 - `plan` can inspect the repository directly but remains non-editing
-- specialized agents remain available for explicit user-directed invocation
+- specialized agents remain available for explicit user-directed invocation only
 - destructive commands, long-running dev servers, privileged escalation, and
   automatic subagent dispatch stay restricted through explicit permission rules
 

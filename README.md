@@ -68,7 +68,7 @@ Backups and restores are limited to that same set, and backups include metadata 
 - [`cli/`](/Users/rafa/workspace/personal/dotfiles-opencode/cli) contains the interactive installer
 - [`frameworks/vanilla/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/vanilla/README.md) explains the minimal vanilla framework
 - [`frameworks/orchestrated/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/README.md) explains the orchestrated framework
-- [`frameworks/autonomous/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/README.md) explains the autonomous framework
+- [`frameworks/streamlined/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/streamlined/README.md) explains the streamlined framework
 - [`frameworks/blueprint/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/README.md) explains the blueprint framework
 
 ## Framework documentation
@@ -77,7 +77,7 @@ If you want to understand how the agentic workflow is organized, how the agents 
 
 - [`frameworks/vanilla/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/vanilla/README.md)
 - [`frameworks/orchestrated/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/README.md)
-- [`frameworks/autonomous/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/autonomous/README.md)
+- [`frameworks/streamlined/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/streamlined/README.md)
 - [`frameworks/blueprint/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/blueprint/README.md)
 
 ## Manual installation
