@@ -1,50 +1,51 @@
 ---
 name: diagram-renderer
-description: Use this skill whenever the user asks for a diagram, flowchart, architecture diagram, structural diagram, or any visual explanation of how something is organised or how it works. Triggers include explicit requests ("draw a diagram", "visualise this flow", "show me the architecture") and implicit ones where a diagram clarifies better than prose (a request lifecycle, a system's components, a decision tree, a containment hierarchy). Produces SVG diagrams with orthogonal connectors, rounded rectangular nodes, two-weight typography, a flat fill-and-stroke aesthetic, and a palette where colour encodes meaning. Only nodes carry backgrounds; containers, legends, and the canvas are transparent. Do NOT use for data charts, UI mockups, illustrative cross-sections, or full ER diagrams with cardinality.
+description: Use this skill whenever the user asks for a diagram, flowchart, architecture diagram, structural diagram, or any visual explanation of how something is organised or how it works. Triggers include explicit requests ("draw a diagram", "visualise this flow", "show me the architecture") and implicit ones where a diagram clarifies better than prose (a request lifecycle, a system's components, a decision tree, a containment hierarchy). Produces SVG diagrams with a flat fill-and-stroke aesthetic and a palette where colour encodes meaning. Do NOT use for data charts, UI mockups, illustrative cross-sections, or full ER diagrams with cardinality.
 ---
 
 # diagram-renderer
 
 Produce SVG diagrams following the system below. One SVG shows one diagram at one level of detail — split multi-layer subjects into several SVGs with prose between them. A request like "architecture + flow + features in one" is several SVGs, not one poster.
 
-## Shapes and layout
+The rules that follow are split into two groups: **the system** (colour tokens, typography, marker definition) is fixed and must be copied verbatim. **The geometry** (shapes, layout, connector routing) is a set of principles — apply judgement, not a template.
 
-- Nodes are rounded rectangles, `rx="6"`, always. No pills, circles, hexagons, or diamonds. Decisions are a node plus two outgoing connectors labelled "yes"/"no".
-- Single-line node: height 48. Two-line (title + subtitle): height 60. Width = max(120, longest text + 32).
-- Place nodes on a grid: pick column centres and row centres first, then position nodes on intersections. Siblings in a row share width.
-- Spacing: ≥32px between siblings, ≥48px between rows/columns.
-- Layout defaults: flows top-to-bottom; trees top-to-bottom with parent above children; architectures layered (actors top/left, core middle, infra bottom/right); containment nested largest-outside.
+## Geometry principles
 
-## Connectors
+### Nodes
 
-All connectors are `<path class="conn"` or `class="conn-dashed"` with `marker-end="url(#arrow)"`. Solid for direct relationships, dashed for indirect/async/optional.
+Nodes are rectangles with rounded corners. Keep the corner radius minimal and consistent across the diagram. Size nodes to their content with comfortable padding; siblings in the same row or column usually share width for rhythm, but this is a default, not a requirement.
 
-Connector shapes — exactly these three forms, nothing else:
+When a node has a title and a subtitle, use two `<text>` elements stacked vertically within the rect. When it has one label, centre it.
 
-- Straight vertical: `M x,y1 L x,y2`
-- Straight horizontal: `M x1,y L x2,y`
-- L-bend: `M x1,y1 L xb,y1 L xb,y2 L x2,y2` (horizontal first) or `M x1,y1 L x1,yb L x2,yb L x2,y2` (vertical first)
+### Layout
 
-Every `L` command matches its predecessor in either x or y. Two coordinates never change in the same segment — that would be a diagonal.
+Pick a direction that matches the subject: flows read top-to-bottom or left-to-right, trees put parents above children, layered architectures stack actors-core-infrastructure, containment nests largest-outside.
 
-Endpoints are always one of these four points on a node's rect `(x, y, w, h)`:
+Place nodes on an implicit grid: choose column centres and row centres first, then position nodes on those intersections. This is what makes connectors land cleanly. Leave enough breathing room between nodes that connectors have space to route — if in doubt, add more.
 
-- Top edge: `(x + w/2, y)`
-- Bottom edge: `(x + w/2, y + h)`
-- Left edge: `(x, y + h/2)`
-- Right edge: `(x + w, y + h/2)`
+### Connectors
 
-A connector's first point and last point are both node-edge points. Endpoints never land in empty space, and they never sit inside a node's fill.
+Connectors are orthogonal by default: horizontal and vertical segments joined at right angles. Diagonals are reserved for cases where an orthogonal path would be contrived (e.g. a radial diagram, a genuinely non-grid layout).
 
-If the direct path between two endpoints would cross a third node, route around it with a U-bend (two bends, three segments).
+Solid lines for direct relationships, dashed for indirect, async, or optional ones. Every connector ends in an arrowhead via `marker-end="url(#arrow)"`.
+
+**Endpoints land on node edges, never in empty space and never inside a node's fill.** The four natural endpoints on a rect `(x, y, w, h)` are the midpoints of each edge: top `(x + w/2, y)`, bottom `(x + w/2, y + h)`, left `(x, y + h/2)`, right `(x + w, y + h/2)`. Use these unless you have a specific reason to offset (e.g. multiple connectors fanning out from the same node).
+
+**Connectors never cross a third node.** If the direct path would, route around with an extra bend. Connectors may cross each other when unavoidable, but minimise it.
+
+For orthogonal paths, each `L` segment changes exactly one coordinate — either x or y, never both. A segment that changes both is a diagonal; if you intend a diagonal, be deliberate about it.
+
+### Containers
+
+Use a dashed, unfilled rectangle to group related nodes. Label the group with a small uppercase label in the top-left. Leave generous padding between the container border and its children. Avoid nesting more than two levels deep.
 
 ## Colour
 
-At most three accent ramps per diagram. Nodes sharing a semantic role share a ramp. Structural and actor nodes use `cat-n` (neutral). Semantic ramps (`cat-warn`, `cat-err`) only when the node represents warning or error state.
+Colour encodes role, not order. Nodes that do the same kind of work share a ramp. A node's ramp changes when its role changes, not when its position does.
 
-Assign by role, never by order. Five processing steps that do the same kind of work all take the same ramp. A node's ramp changes only when its role changes.
+Ramps available: `cat-a` (primary), `cat-b` (secondary/counterpart), `cat-c` (tertiary), `cat-n` (neutral — for actors, structural elements, anything without a semantic role), `cat-warn`, `cat-err`. Use warn/err only for nodes that genuinely represent warning or error states.
 
-Categories: `cat-a` primary work, `cat-b` secondary/counterpart, `cat-c` third (rare), `cat-n` neutral, `cat-warn`, `cat-err`.
+Favour restraint: most diagrams need two or three ramps plus neutral. Using every available colour dilutes the encoding.
 
 ## Canvas and tokens
 
@@ -63,11 +64,15 @@ Categories: `cat-a` primary work, `cat-b` secondary/counterpart, `cat-c` third (
 </svg>
 ```
 
-`W` is 720–880. `H` = bottom edge of the lowest element + 32px. Background transparent. 32px safe margin on all sides. Text in the diagram follows the user's language; identifiers like `index.ts` stay in native form.
+Canvas width typically 720–880; height is whatever the content needs plus a comfortable bottom margin. Background transparent. Keep a safe margin around the content on all sides.
 
-Paint order inside the SVG: containers → connectors → nodes. Nodes last so their rects terminate connectors cleanly at the edge.
+Text in the diagram follows the user's language; identifiers like `index.ts` stay in native form.
 
-Style block (the entire palette and typography):
+Paint containers first, then connectors, then nodes, so the node fills terminate connectors cleanly at the edge.
+
+### Style block
+
+Copy this block verbatim. It defines the entire palette and typography — three text sizes (14/12/11px), two weights (400/500), sentence case. Don't introduce colours, fonts, or stroke widths outside it, and don't use inline `style="..."` on text.
 
 ```
 <style>
@@ -106,47 +111,43 @@ Style block (the entire palette and typography):
 </style>
 ```
 
-Three text sizes (14/12/11px), two weights (400/500), sentence case. No colours, fonts, or stroke widths outside this block. No inline `style="..."` on text.
+The `cat-X` class applies colour only through child classes `.fill` and `.stroke`. A bare `cat-X` on a rect renders black — always include the child classes.
 
 ## Element patterns
+
+Use these as reference, not as templates to paste. Adjust dimensions to the content.
 
 Node:
 
 ```
 <g class="node cat-a">
-  <rect class="fill stroke" x="..." y="..." width="..." height="48" rx="6"/>
+  <rect class="fill stroke" x="..." y="..." width="..." height="..." rx="6"/>
   <text class="t ink" x="cx" y="cy" text-anchor="middle" dominant-baseline="central">Label</text>
 </g>
 ```
 
-For a two-line node, use two `<text>` elements: title at `y = cy - 8` with `class="t ink"`, subtitle at `y = cy + 9` with `class="ts ink"`.
+Two-line node: two `<text>` elements, title with `class="t ink"` slightly above centre, subtitle with `class="ts ink"` slightly below.
 
-Container (groups nodes visually, no fill):
+Container:
 
 ```
 <rect x="..." y="..." width="..." height="..." rx="10"
       fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
-<text class="label" x="container_x + 14" y="container_y + 20">Section name</text>
+<text class="label" x="..." y="...">Section name</text>
 ```
 
-Padding inside a container: ≥24px between its border and any child. Maximum two nesting levels.
-
-Legend entry (no surrounding background, no border):
+Legend entry (include only when the mapping isn't already obvious from the labels):
 
 ```
 <g class="cat-a">
   <rect class="fill stroke" x="..." y="..." width="12" height="12" rx="3"/>
 </g>
-<text class="ts" x="swatch_x + 18" y="swatch_y + 6" dominant-baseline="central">Category name</text>
+<text class="ts" x="..." y="..." dominant-baseline="central">Category name</text>
 ```
-
-Note: the `cat-X` class applies colour only through child classes `.fill` and `.stroke`. A bare `cat-X` on a rect renders black.
-
-Legends are optional. Include one only when the category mapping is not obvious from the node labels themselves.
 
 ## Minimal example
 
-Three processing nodes, one neutral actor, one side-channel sink. Category A repeats because Gateway and Service share a role. The dashed connector to Audit log is a single vertical line because the target sits directly below the source — the grid earns that.
+Three processing nodes, one neutral actor, one side-channel sink. Categories A and N repeat because Gateway and Service share a role, and Client is a plain actor. The dashed connector to Audit log is a single vertical segment because the target sits directly below the source — the grid earns that.
 
 ```
 <g class="node cat-n">
