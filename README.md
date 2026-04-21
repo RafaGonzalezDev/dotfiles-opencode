@@ -24,6 +24,8 @@ npm install
 npm run setup
 ```
 
+`npm run start` also builds the CLI automatically before launching it, so it is safe to rerun directly from the repository root.
+
 The setup flow lets you:
 
 - install or update the OpenCode configuration

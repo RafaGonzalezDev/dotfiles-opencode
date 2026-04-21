@@ -13,6 +13,14 @@
     }
   },
   "agent": {
+    "general": {
+      "disable": true,
+      "hidden": true
+    },
+    "explore": {
+      "disable": true,
+      "hidden": true
+    },
     "plan": {
       "tools": {
         "playwright*": true,
