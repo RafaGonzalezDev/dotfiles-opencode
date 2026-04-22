@@ -43,7 +43,8 @@ Instead, it presents a concise operational summary:
 
 - an existing managed configuration was detected
 - a safety backup will be created automatically
-- the selected framework will replace the managed OpenCode entries
+- the selected framework will replace the managed OpenCode entries transactionally
+- rollback will happen automatically if apply or verification fails
 
 Detailed per-entry inspection remains available through the explicit
 `View differences` action.
@@ -56,25 +57,41 @@ want to update the runtime first.
 
 ### Supported update paths
 
-- Homebrew: `brew update` and `brew upgrade opencode`
+- Homebrew: `brew update` and `brew upgrade anomalyco/tap/opencode`
 - npm: `npm install -g opencode-ai`
+
+If Homebrew is missing, the CLI no longer runs the Homebrew bootstrap script.
+Instead, it shows the official Homebrew install command and waits for the user
+to run it manually.
 
 ### Runtime verification
 
 The CLI now separates three concerns before reporting an update result:
 
 - detecting the active `opencode` binary on `PATH`
-- matching that binary to a known Homebrew/npm installation when possible
-- classifying the post-update result as `updated`, `unchanged`, `verification mismatch`, `unverified`, `failed`, or `skipped`
+- verifying that the selected Homebrew/npm method installed a real executable
+- classifying the post-update result as `updated`, `unchanged`, `verification mismatch`, `unverified`, `path warning`, `failed`, or `skipped`
 
 This avoids claiming that OpenCode is already current unless the active binary was
-actually re-checked after running the selected update command.
+actually re-checked after running the selected update command, while still
+allowing the flow to continue when the binary was installed successfully but the
+current shell has not refreshed `PATH` yet.
 
-### Why
+## Backup and restore feedback
 
-Updating the runtime is operationally different from installing a framework.
-Keeping that decision explicit avoids surprising side effects and lets the user:
+The summary and restore flows now distinguish these outcomes explicitly:
 
-- update OpenCode without changing the managed framework files
-- continue without updating
-- skip framework installation entirely after the runtime decision
+- blocking failure before apply
+- automatic rollback completed after a failed apply or failed verification
+- successful install with runtime PATH warnings
+- invalid or non-restorable backup selection
+- successful restore from both v2 and legacy v1 manifests
+
+## Safety constraints surfaced in UI
+
+The CLI treats these cases as blocking errors and reports them clearly:
+
+- symbolic links inside managed config entries
+- symbolic links inside framework assets
+- failed preflight inspection of the managed tree
+- backup manifests that do not match the snapshot being restored

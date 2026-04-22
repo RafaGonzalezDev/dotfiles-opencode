@@ -12,7 +12,8 @@ This repository packages one or more reusable OpenCode frameworks and an interac
 
 - A guided CLI setup flow for installing or updating the configuration
 - Automatic safety backups before any managed configuration is overwritten
-- Backup restore from the 5 most recent backups
+- Transactional framework installs with automatic rollback on blocking failures
+- Backup restore from the 5 most recent backups, including compatibility with legacy v1 snapshots
 - A versioned `frameworks/` catalog with agents, skills, and shared config
 
 ## Quick start
@@ -40,9 +41,10 @@ The installer will:
 2. Detect whether OpenCode is already installed
 3. Offer Homebrew or npm installation when needed
 4. Detect an existing OpenCode configuration
-5. Create a safety backup before cleaning managed files
-6. Remove previously managed files and import the selected framework
-7. Verify the result
+5. Create a safety backup before replacing managed files
+6. Stage the selected framework and apply it transactionally
+7. Roll back automatically if apply or verification fails
+8. Verify the final managed configuration against the selected framework
 
 ### Managed files
 
@@ -53,7 +55,25 @@ The installer manages only these entries inside `~/.config/opencode/`:
 - `skills/`
 - `opencode.json`
 
-Backups and restores are limited to that same set, and backups include metadata about the active framework when available.
+Backups and restores are limited to that same set. New backups use a v2 manifest with per-file hashes and permissions; existing v1 backups remain restorable.
+
+### Safety rules
+
+- Symbolic links are not supported anywhere inside managed entries or installable frameworks.
+- If the CLI cannot inspect the current managed tree safely, it aborts before installation.
+- Framework installs and backup restores use staging plus rollback instead of in-place destructive replacement.
+
+### Runtime installation notes
+
+- Homebrew is only automated when `brew` is already present.
+- If Homebrew is missing, the CLI shows the official Homebrew install command instead of running it automatically.
+- The Homebrew OpenCode command now uses the official tap:
+
+```bash
+brew install anomalyco/tap/opencode
+```
+
+- If the selected method installs OpenCode successfully but the active shell `PATH` still points elsewhere, the CLI reports a warning instead of treating the install as corrupt.
 
 ### Useful flags
 
@@ -64,8 +84,8 @@ Backups and restores are limited to that same set, and backups include metadata 
 
 ## Repository layout
 
-- [`frameworks/`](/Users/rafa/workspace/personal/dotfiles-opencode/frameworks) contains the installable OpenCode frameworks
-- [`cli/`](/Users/rafa/workspace/personal/dotfiles-opencode/cli) contains the interactive installer
+- [`frameworks/`](/home/rafa/workspace/dotfiles-opencode/frameworks) contains the installable OpenCode frameworks
+- [`cli/`](/home/rafa/workspace/dotfiles-opencode/cli) contains the interactive installer
 - [`frameworks/vanilla/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/vanilla/README.md) explains the minimal vanilla framework
 - [`frameworks/orchestrated/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/orchestrated/README.md) explains the orchestrated framework
 - [`frameworks/streamlined/README.md`](/home/rafa/workspace/dotfiles-opencode/frameworks/streamlined/README.md) explains the streamlined framework
@@ -92,4 +112,5 @@ If you prefer not to use the installer, you can still copy the managed files man
 
 - If prerequisites such as Node.js, npm, or Git are missing, install them first and rerun `npm run setup`
 - If OpenCode is missing, the CLI can guide you through installing it
+- If the CLI reports a PATH warning after installing OpenCode, open a new shell or refresh your environment and rerun `opencode --version`
 - If something goes wrong, use the backup restore option from the setup menu
