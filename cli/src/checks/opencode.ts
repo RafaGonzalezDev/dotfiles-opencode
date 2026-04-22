@@ -1,10 +1,35 @@
 import { execa } from 'execa';
 import { realpath } from 'node:fs/promises';
 import path from 'node:path';
-import type { OpenCodeInstallMethod, OpenCodeStatus } from '../types/index.js';
+import type {
+  OpenCodeInstallMethod,
+  OpenCodeStatus,
+} from '../types/index.js';
 import { findExecutable } from '../utils/command.js';
 
-async function detectInstalledMethods(): Promise<OpenCodeInstallMethod[]> {
+interface ActiveBinaryInfo {
+  version: string | null;
+  executablePath: string | null;
+}
+
+interface MethodResolution {
+  executableCandidates: string[];
+  ownershipRoots: string[];
+}
+
+export interface MethodVerificationResult {
+  installed: boolean;
+  executablePath: string | null;
+  version: string | null;
+  activeOnPath: boolean;
+  activeStatus: OpenCodeStatus;
+}
+
+function getExecutableName(): string {
+  return process.platform === 'win32' ? 'opencode.cmd' : 'opencode';
+}
+
+export async function detectInstalledMethods(): Promise<OpenCodeInstallMethod[]> {
   const methods = new Set<OpenCodeInstallMethod>();
 
   try {
@@ -24,43 +49,79 @@ async function detectInstalledMethods(): Promise<OpenCodeInstallMethod[]> {
   return Array.from(methods);
 }
 
-async function getHomebrewRoots(): Promise<string[]> {
+async function getHomebrewResolution(): Promise<MethodResolution> {
   try {
+    const executableName = getExecutableName();
     const [{ stdout: brewPrefixStdout }, { stdout: formulaPrefixStdout }, { stdout: cellarStdout }] =
       await Promise.all([
         execa('brew', ['--prefix']),
         execa('brew', ['--prefix', 'opencode']),
         execa('brew', ['--cellar', 'opencode']),
       ]);
+
     const brewPrefix = brewPrefixStdout.trim();
     const formulaPrefix = formulaPrefixStdout.trim();
     const cellarPrefix = cellarStdout.trim();
 
-    return [
-      path.join(brewPrefix, 'bin', 'opencode'),
-      path.join(formulaPrefix, 'bin', 'opencode'),
-      cellarPrefix,
-    ].map((entry) => path.normalize(entry));
+    return {
+      executableCandidates: [
+        path.join(formulaPrefix, 'bin', executableName),
+        path.join(brewPrefix, 'bin', executableName),
+      ].map((entry) => path.normalize(entry)),
+      ownershipRoots: [
+        path.join(brewPrefix, 'bin', executableName),
+        path.join(formulaPrefix, 'bin', executableName),
+        cellarPrefix,
+      ].map((entry) => path.normalize(entry)),
+    };
   } catch {
-    return [];
+    return { executableCandidates: [], ownershipRoots: [] };
   }
 }
 
-async function getNpmRoots(): Promise<string[]> {
+async function getNpmResolution(): Promise<MethodResolution> {
   try {
+    const executableName = getExecutableName();
     const [{ stdout: prefixStdout }, { stdout: rootStdout }] = await Promise.all([
       execa('npm', ['prefix', '-g']),
       execa('npm', ['root', '-g']),
     ]);
+
     const prefix = prefixStdout.trim();
     const root = rootStdout.trim();
     const binDir = process.platform === 'win32' ? prefix : path.join(prefix, 'bin');
 
-    return [path.join(binDir, 'opencode'), path.join(root, 'opencode-ai')].map((entry) =>
-      path.normalize(entry)
-    );
+    return {
+      executableCandidates: [path.join(binDir, executableName)].map((entry) => path.normalize(entry)),
+      ownershipRoots: [path.join(binDir, executableName), path.join(root, 'opencode-ai')].map((entry) =>
+        path.normalize(entry)
+      ),
+    };
   } catch {
-    return [];
+    return { executableCandidates: [], ownershipRoots: [] };
+  }
+}
+
+async function getMethodResolution(method: OpenCodeInstallMethod): Promise<MethodResolution> {
+  return method === 'homebrew' ? getHomebrewResolution() : getNpmResolution();
+}
+
+async function getActiveBinaryInfo(): Promise<ActiveBinaryInfo> {
+  try {
+    const [{ stdout }, executablePath] = await Promise.all([
+      execa('opencode', ['--version']),
+      findExecutable('opencode'),
+    ]);
+
+    return {
+      version: stdout.trim(),
+      executablePath,
+    };
+  } catch {
+    return {
+      version: null,
+      executablePath: await findExecutable('opencode'),
+    };
   }
 }
 
@@ -74,37 +135,35 @@ async function resolveActiveInstallMethod(
 
   const normalizedExecutablePath = path.normalize(executablePath);
   const realExecutablePath = await realpath(normalizedExecutablePath).catch(() => normalizedExecutablePath);
-  const matchesMethod = async (method: OpenCodeInstallMethod, roots: string[]) => {
-    const normalizedRoots = await Promise.all(
-      roots.map(async (root) => {
-        const normalizedRoot = path.normalize(root);
-        const realRoot = await realpath(normalizedRoot).catch(() => normalizedRoot);
-        return { normalizedRoot, realRoot };
-      })
-    );
-
-    return normalizedRoots.some(({ normalizedRoot, realRoot }) => {
-      const exactMatch =
-        normalizedExecutablePath === normalizedRoot || realExecutablePath === normalizedRoot;
-      const childMatch =
-        normalizedExecutablePath.startsWith(`${normalizedRoot}${path.sep}`) ||
-        realExecutablePath.startsWith(`${normalizedRoot}${path.sep}`) ||
-        normalizedExecutablePath.startsWith(`${realRoot}${path.sep}`) ||
-        realExecutablePath.startsWith(`${realRoot}${path.sep}`);
-
-      return method === 'homebrew' ? exactMatch || childMatch : exactMatch || childMatch;
-    });
-  };
 
   const methodChecks = await Promise.all(
-    installMethods.map(async (method) => ({
-      method,
-      matches: await matchesMethod(method, method === 'homebrew' ? await getHomebrewRoots() : await getNpmRoots()),
-    }))
+    installMethods.map(async (method) => {
+      const resolution = await getMethodResolution(method);
+      const roots = await Promise.all(
+        resolution.ownershipRoots.map(async (root) => {
+          const normalizedRoot = path.normalize(root);
+          const realRoot = await realpath(normalizedRoot).catch(() => normalizedRoot);
+          return { normalizedRoot, realRoot };
+        })
+      );
+
+      const matches = roots.some(({ normalizedRoot, realRoot }) => {
+        const exactMatch =
+          normalizedExecutablePath === normalizedRoot || realExecutablePath === normalizedRoot;
+        const childMatch =
+          normalizedExecutablePath.startsWith(`${normalizedRoot}${path.sep}`) ||
+          realExecutablePath.startsWith(`${normalizedRoot}${path.sep}`) ||
+          normalizedExecutablePath.startsWith(`${realRoot}${path.sep}`) ||
+          realExecutablePath.startsWith(`${realRoot}${path.sep}`);
+
+        return exactMatch || childMatch;
+      });
+
+      return { method, matches };
+    })
   );
 
   const matchedMethods = methodChecks.filter((entry) => entry.matches);
-
   return matchedMethods.length === 1 ? matchedMethods[0]?.method ?? null : null;
 }
 
@@ -120,38 +179,59 @@ function orderInstallMethods(
 }
 
 export async function checkOpenCode(): Promise<OpenCodeStatus> {
-  try {
-    const { stdout } = await execa('opencode', ['--version']);
-    const version = stdout.trim();
-    const [executablePath, installMethods] = await Promise.all([
-      findExecutable('opencode'),
-      detectInstalledMethods(),
-    ]);
-    const activeInstallMethod = await resolveActiveInstallMethod(executablePath, installMethods);
-    const orderedInstallMethods = orderInstallMethods(installMethods, activeInstallMethod);
-    const installationAlignment =
-      installMethods.length === 0
-        ? 'unknown'
-        : activeInstallMethod
-          ? 'matched'
-          : 'mismatch';
+  const [activeInfo, installMethods] = await Promise.all([
+    getActiveBinaryInfo(),
+    detectInstalledMethods(),
+  ]);
+  const activeInstallMethod = await resolveActiveInstallMethod(activeInfo.executablePath, installMethods);
+  const orderedInstallMethods = orderInstallMethods(installMethods, activeInstallMethod);
+  const installationAlignment =
+    installMethods.length === 0
+      ? 'unknown'
+      : activeInfo.version && activeInstallMethod
+        ? 'matched'
+        : activeInfo.version
+          ? 'mismatch'
+          : 'unknown';
 
-    return {
-      installed: true,
-      version,
-      path: executablePath,
-      installMethods: orderedInstallMethods,
-      activeInstallMethod,
-      installationAlignment,
-    };
-  } catch {
-    return {
-      installed: false,
-      version: null,
-      path: null,
-      installMethods: [],
-      activeInstallMethod: null,
-      installationAlignment: 'unknown',
-    };
+  return {
+    installed: activeInfo.version !== null,
+    version: activeInfo.version,
+    path: activeInfo.executablePath,
+    installMethods: orderedInstallMethods,
+    activeInstallMethod,
+    installationAlignment,
+  };
+}
+
+export async function verifyInstalledMethod(
+  method: OpenCodeInstallMethod
+): Promise<MethodVerificationResult> {
+  const [resolution, activeStatus] = await Promise.all([
+    getMethodResolution(method),
+    checkOpenCode(),
+  ]);
+
+  for (const candidate of resolution.executableCandidates) {
+    try {
+      const { stdout } = await execa(candidate, ['--version']);
+      return {
+        installed: true,
+        executablePath: candidate,
+        version: stdout.trim(),
+        activeOnPath: activeStatus.activeInstallMethod === method,
+        activeStatus,
+      };
+    } catch {
+      // Try the next candidate.
+    }
   }
+
+  return {
+    installed: false,
+    executablePath: null,
+    version: null,
+    activeOnPath: false,
+    activeStatus,
+  };
 }

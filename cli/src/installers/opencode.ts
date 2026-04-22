@@ -1,5 +1,6 @@
 import { execa } from 'execa';
-import type { OpenCodeInstallMethod } from '../types/index.js';
+import { verifyInstalledMethod } from '../checks/opencode.js';
+import type { OpenCodeInstallMethod, RuntimeInstallResult } from '../types/index.js';
 
 const INSTALL_MESSAGES = [
   'Installing...',
@@ -8,10 +9,38 @@ const INSTALL_MESSAGES = [
   'Finalizando...',
 ];
 
+function getPathWarning(method: OpenCodeInstallMethod, executablePath: string): string {
+  return `OpenCode was installed via ${method} at ${executablePath}, but the active shell PATH does not point to that binary yet. Reopen the shell or refresh your environment before running opencode directly.`;
+}
+
+async function verifyMethodInstallation(method: OpenCodeInstallMethod): Promise<RuntimeInstallResult> {
+  const verification = await verifyInstalledMethod(method);
+
+  if (!verification.installed || !verification.executablePath) {
+    return {
+      success: false,
+      error: `OpenCode installation via ${method} completed, but the expected binary could not be verified.`,
+    };
+  }
+
+  if (!verification.activeOnPath) {
+    return {
+      success: true,
+      warning: getPathWarning(method, verification.executablePath),
+      version: verification.version,
+    };
+  }
+
+  return {
+    success: true,
+    version: verification.version,
+  };
+}
+
 export async function installOpenCode(
   method: OpenCodeInstallMethod,
   onProgress: (message: string) => void
-): Promise<{ success: boolean; error?: string }> {
+): Promise<RuntimeInstallResult> {
   onProgress(
     method === 'homebrew'
       ? 'Installing OpenCode with Homebrew...'
@@ -22,21 +51,15 @@ export async function installOpenCode(
     messageIndex = (messageIndex + 1) % INSTALL_MESSAGES.length;
     onProgress(INSTALL_MESSAGES[messageIndex]);
   }, 2500);
-  
+
   try {
     if (method === 'homebrew') {
-      await execa('brew', ['install', 'opencode']);
+      await execa('brew', ['install', 'anomalyco/tap/opencode']);
     } else {
       await execa('npm', ['install', '-g', 'opencode-ai']);
     }
-    
-    // Verify installation
-    try {
-      await execa('opencode', ['--version']);
-      return { success: true };
-    } catch {
-      return { success: false, error: 'OpenCode was installed but verification failed' };
-    }
+
+    return await verifyMethodInstallation(method);
   } catch (error) {
     return {
       success: false,
@@ -50,7 +73,7 @@ export async function installOpenCode(
 export async function updateOpenCode(
   method: OpenCodeInstallMethod,
   onProgress: (message: string) => void
-): Promise<{ success: boolean; error?: string }> {
+): Promise<RuntimeInstallResult> {
   onProgress(
     method === 'homebrew'
       ? 'Updating OpenCode with Homebrew...'
@@ -65,13 +88,12 @@ export async function updateOpenCode(
   try {
     if (method === 'homebrew') {
       await execa('brew', ['update']);
-      await execa('brew', ['upgrade', 'opencode']);
+      await execa('brew', ['upgrade', 'anomalyco/tap/opencode']);
     } else {
       await execa('npm', ['install', '-g', 'opencode-ai']);
     }
 
-    await execa('opencode', ['--version']);
-    return { success: true };
+    return await verifyMethodInstallation(method);
   } catch (error) {
     return {
       success: false,
@@ -84,14 +106,14 @@ export async function updateOpenCode(
 
 export function getOpenCodeInstallCommand(method: OpenCodeInstallMethod): string {
   if (method === 'homebrew') {
-    return 'brew install opencode';
+    return 'brew install anomalyco/tap/opencode';
   }
   return 'npm install -g opencode-ai';
 }
 
 export function getOpenCodeUpdateCommand(method: OpenCodeInstallMethod): string {
   if (method === 'homebrew') {
-    return 'brew update && brew upgrade opencode';
+    return 'brew update && brew upgrade anomalyco/tap/opencode';
   }
 
   return 'npm install -g opencode-ai';
