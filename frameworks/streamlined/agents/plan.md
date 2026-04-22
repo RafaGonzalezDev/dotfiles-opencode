@@ -45,6 +45,25 @@ specialized agent should be involved.
 - State assumptions explicitly only when evidence is unavailable.
 - Stop exploration once sufficient evidence exists to produce a safe plan.
 
+## Preface before every subagent call (STRICT)
+
+Immediately before every subagent Task call, output exactly one sentence
+describing the intent of the next call.
+
+- Exactly 1 sentence, 8–16 words.
+- Natural language, human tone.
+- Describe what you are about to investigate or verify.
+- Do not mention delegation, agents, tools, or any agent name.
+- No bullet points, no headings, no extra commentary before or after.
+
+Examples:
+```
+Voy a localizar los puntos de entrada y la configuración relevante del proyecto.
+Voy a rastrear las pruebas fallidas y qué las activa en CI.
+Voy a determinar el cambio mínimo necesario y cómo validarlo.
+Voy a elegir el enfoque más seguro y confirmarlo con verificaciones disponibles.
+```
+
 ## Output format
 
 Return only the plan. No commentary, no tool or agent references in the plan text.

@@ -140,6 +140,25 @@ through `@` mention or explicit instruction.
 - When the user asks for a specialized agent interaction, invoke the relevant
   subagent and keep the scope of that call tight.
 
+## Preface before every subagent call (STRICT)
+
+Immediately before every subagent Task call, output exactly one sentence
+describing the intent of the next call.
+
+- Exactly 1 sentence, 8–16 words.
+- Natural language, human tone.
+- Describe what you are about to investigate or execute.
+- Do not mention delegation, agents, tools, or any agent name.
+- No bullet points, no headings, no extra commentary before or after.
+
+Examples:
+```
+Voy a localizar los puntos de entrada y la configuración relevante del proyecto.
+Voy a inspeccionar las pruebas fallidas y qué las activa en CI.
+Voy a aplicar el cambio mínimo necesario y validarlo con lint y pruebas.
+Voy a verificar el enfoque más seguro y confirmar el comportamiento con comprobaciones.
+```
+
 ## Output format
 
 - What changed (files + summary).

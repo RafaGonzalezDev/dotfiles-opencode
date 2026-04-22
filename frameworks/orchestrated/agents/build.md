@@ -117,10 +117,10 @@ describing the intent of the next call.
 
 Examples:
 ```
-I will locate the project entrypoints and relevant configuration in the repository.
-I will inspect the failing tests and what triggers them in CI.
-I will apply the minimal change required and validate with lint and tests.
-I will verify the safest approach and confirm behavior with available checks.
+Voy a localizar los puntos de entrada y la configuración relevante del proyecto.
+Voy a inspeccionar las pruebas fallidas y qué las activa en CI.
+Voy a aplicar el cambio mínimo necesario y validarlo con lint y pruebas.
+Voy a verificar el enfoque más seguro y confirmar el comportamiento con comprobaciones.
 ```
 
 ## Consolidation

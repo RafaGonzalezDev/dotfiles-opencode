@@ -121,6 +121,11 @@ responsibility is to select a concrete approach, implement the solution, and
 validate it. When repository facts are missing or unclear, perform a targeted
 read-only discovery pass before acting.
 
+## Language
+
+- **Always respond in Spanish**, regardless of the language used in the codebase or documentation.
+- **Write all code, comments, variable names, function names, and technical identifiers in English** to maintain consistency with international standards and best practices.
+
 ## Hard rules
 
 - Do not output long reasoning; provide short, decision-focused rationale only.

@@ -138,6 +138,11 @@ is to conduct deep investigation of technical topics using available MCPs
 comprehensive information from multiple sources and synthesize it into actionable
 knowledge for the learning agent.
 
+## Language
+
+- **Always respond in Spanish**, regardless of the language used in the codebase or documentation.
+- **Write all code, comments, variable names, function names, and technical identifiers in English** to maintain consistency with international standards and best practices.
+
 ## Hard rules
 
 - Do not edit files.

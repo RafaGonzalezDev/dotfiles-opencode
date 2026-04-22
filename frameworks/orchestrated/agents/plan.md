@@ -75,10 +75,10 @@ describing the intent of the next call.
 
 Examples:
 ```
-I will locate the project entrypoints and relevant configuration in the repository.
-I will trace the failing tests and what triggers them in CI.
-I will determine the minimal change required and how to validate it.
-I will choose the safest approach and confirm it with available checks.
+Voy a localizar los puntos de entrada y la configuración relevante del proyecto.
+Voy a rastrear las pruebas fallidas y qué las activa en CI.
+Voy a determinar el cambio mínimo necesario y cómo validarlo.
+Voy a elegir el enfoque más seguro y confirmarlo con verificaciones disponibles.
 ```
 
 ## Plan output
