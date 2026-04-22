@@ -1,59 +1,28 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as path from 'node:path';
 import type { InstallResult } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
 import { MANAGED_CONFIG_ENTRIES, REQUIRED_FRAMEWORK_ENTRIES } from '../utils/managed-config.js';
 import { getFrameworkSourceDir } from '../frameworks/index.js';
+import {
+  collectManagedTree,
+  compareManagedManifests,
+  copyManagedPath,
+  pathExists,
+} from '../utils/managed-tree.js';
+import {
+  applyManagedStaging,
+  createPreparedTransaction,
+  restoreManagedRollback,
+} from '../utils/managed-transaction.js';
 
 const CONFIG_DIR = getConfigDir();
-
-async function copyPath(src: string, dest: string): Promise<{ copied: number; errors: string[] }> {
-  let copied = 0;
-  const errors: string[] = [];
-
-  try {
-    const stat = await fs.promises.stat(src);
-
-    if (stat.isDirectory()) {
-      await fs.promises.mkdir(dest, { recursive: true });
-      const entries = await fs.promises.readdir(src, { withFileTypes: true });
-
-      for (const entry of entries) {
-        const result = await copyPath(
-          path.join(src, entry.name),
-          path.join(dest, entry.name)
-        );
-        copied += result.copied;
-        errors.push(...result.errors);
-      }
-
-      return { copied, errors };
-    }
-
-    await fs.promises.mkdir(path.dirname(dest), { recursive: true });
-    await fs.promises.copyFile(src, dest);
-
-    if (stat.mode & 0o111) {
-      await fs.promises.chmod(dest, stat.mode);
-    }
-
-    copied++;
-  } catch (err) {
-    errors.push(`Failed to copy ${src}: ${err instanceof Error ? err.message : 'Unknown error'}`);
-  }
-
-  return { copied, errors };
-}
 
 async function validateFrameworkEntries(frameworkDir: string): Promise<string[]> {
   const errors: string[] = [];
 
   for (const entry of REQUIRED_FRAMEWORK_ENTRIES) {
     const sourcePath = path.join(frameworkDir, entry);
-
-    try {
-      await fs.promises.access(sourcePath);
-    } catch {
+    if (!(await pathExists(sourcePath))) {
       errors.push(`Missing required framework entry: ${sourcePath}`);
     }
   }
@@ -75,68 +44,106 @@ export async function installConfig(frameworkId: string): Promise<InstallResult>
     };
   }
 
+  const frameworkTree = await collectManagedTree(frameworkDir, MANAGED_CONFIG_ENTRIES);
+  if (frameworkTree.errors.length > 0) {
+    return {
+      status: 'failed',
+      success: false,
+      filesInstalled: 0,
+      frameworkId,
+      errors: frameworkTree.errors,
+    };
+  }
+
+  const transaction = await createPreparedTransaction(CONFIG_DIR);
+
   try {
-    await fs.promises.mkdir(CONFIG_DIR, { recursive: true });
-  } catch (err) {
+    let copied = 0;
+
+    for (const entry of MANAGED_CONFIG_ENTRIES) {
+      const srcPath = path.join(frameworkDir, entry);
+      if (!(await pathExists(srcPath))) {
+        continue;
+      }
+
+      copied += await copyManagedPath(srcPath, path.join(transaction.stagingRoot, entry));
+    }
+
+    const stagedTree = await collectManagedTree(transaction.stagingRoot, MANAGED_CONFIG_ENTRIES);
+    const stagedErrors = [
+      ...stagedTree.errors,
+      ...compareManagedManifests(frameworkTree.manifest, stagedTree.manifest, 'Staging area'),
+    ];
+
+    if (stagedErrors.length > 0) {
+      return {
+        status: 'failed',
+        success: false,
+        filesInstalled: 0,
+        frameworkId,
+        errors: stagedErrors,
+      };
+    }
+
+    try {
+      await applyManagedStaging(CONFIG_DIR, transaction.stagingRoot, transaction.rollbackRoot);
+    } catch (error) {
+      return {
+        status: 'failed',
+        success: false,
+        filesInstalled: 0,
+        frameworkId,
+        errors: [error instanceof Error ? error.message : 'Unknown apply error'],
+        rolledBack: true,
+      };
+    }
+
+    if (process.env.OPENCODE_SETUP_FAIL_AFTER_APPLY === '1') {
+      await restoreManagedRollback(CONFIG_DIR, transaction.rollbackRoot);
+      return {
+        status: 'failed',
+        success: false,
+        filesInstalled: 0,
+        frameworkId,
+        errors: ['Forced failure after apply for transaction rollback testing'],
+        rolledBack: true,
+      };
+    }
+
+    const installedTree = await collectManagedTree(CONFIG_DIR, MANAGED_CONFIG_ENTRIES);
+    const installErrors = [
+      ...installedTree.errors,
+      ...compareManagedManifests(frameworkTree.manifest, installedTree.manifest, 'Installed configuration'),
+    ];
+
+    if (installErrors.length > 0) {
+      await restoreManagedRollback(CONFIG_DIR, transaction.rollbackRoot);
+      return {
+        status: 'failed',
+        success: false,
+        filesInstalled: 0,
+        frameworkId,
+        errors: installErrors,
+        rolledBack: true,
+      };
+    }
+
+    return {
+      status: 'success',
+      success: true,
+      filesInstalled: copied,
+      frameworkId,
+      errors: [],
+    };
+  } catch (error) {
     return {
       status: 'failed',
       success: false,
       filesInstalled: 0,
       frameworkId,
-      errors: [
-        `Failed to create config directory: ${err instanceof Error ? err.message : 'Unknown error'}`,
-      ],
+      errors: [error instanceof Error ? error.message : 'Unknown error'],
     };
+  } finally {
+    await transaction.cleanup();
   }
-
-  let copied = 0;
-  const errors: string[] = [];
-
-  for (const entry of MANAGED_CONFIG_ENTRIES) {
-    try {
-      await fs.promises.rm(path.join(CONFIG_DIR, entry), {
-        recursive: true,
-        force: true,
-      });
-    } catch (err) {
-      errors.push(
-        `Failed to remove existing ${entry}: ${err instanceof Error ? err.message : 'Unknown error'}`
-      );
-    }
-  }
-
-  if (errors.length > 0) {
-    return {
-      status: 'failed',
-      success: false,
-      filesInstalled: 0,
-      frameworkId,
-      errors,
-    };
-  }
-
-  for (const entry of MANAGED_CONFIG_ENTRIES) {
-    const srcPath = path.join(frameworkDir, entry);
-    const destPath = path.join(CONFIG_DIR, entry);
-
-    try {
-      await fs.promises.access(srcPath);
-    } catch {
-      continue;
-    }
-
-    const result = await copyPath(srcPath, destPath);
-    copied += result.copied;
-    errors.push(...result.errors);
-  }
-
-  const hasErrors = errors.length > 0;
-
-  return {
-    status: hasErrors ? (copied > 0 ? 'partial' : 'failed') : 'success',
-    success: !hasErrors,
-    filesInstalled: copied,
-    frameworkId,
-    errors,
-  };
 }

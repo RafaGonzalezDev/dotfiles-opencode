@@ -1,69 +1,39 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import type { ConfigDetectionResult, ConfigFile } from '../types/index.js';
+import * as path from 'node:path';
+import type { ConfigDetectionResult, ConfigFile, ManagedFileRecord } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
 import { getFrameworkSourceDir } from '../frameworks/index.js';
-import { MANAGED_CONFIG_DIRECTORIES, MANAGED_CONFIG_FILES } from '../utils/managed-config.js';
+import {
+  MANAGED_CONFIG_DIRECTORIES,
+  MANAGED_CONFIG_ENTRIES,
+  MANAGED_CONFIG_FILES,
+} from '../utils/managed-config.js';
+import { collectManagedTree, pathExists } from '../utils/managed-tree.js';
 
 const CONFIG_DIR = getConfigDir();
 
-async function getFileHash(filePath: string): Promise<string> {
-  try {
-    const content = await fs.promises.readFile(filePath);
-    return crypto.createHash('md5').update(content).digest('hex');
-  } catch {
-    return '';
-  }
+function getDirectoryRecords(files: ManagedFileRecord[], directory: string): ManagedFileRecord[] {
+  const prefix = `${directory}/`;
+  return files.filter((file) => file.relativePath.startsWith(prefix));
 }
 
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.promises.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function buildDirectoryManifest(rootDir: string): Promise<Map<string, string>> {
-  const manifest = new Map<string, string>();
-
-  async function walk(currentDir: string): Promise<void> {
-    const entries = await fs.promises.readdir(currentDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const entryPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        await walk(entryPath);
-      } else {
-        const relativePath = path.relative(rootDir, entryPath);
-        manifest.set(relativePath, await getFileHash(entryPath));
-      }
-    }
-  }
-
-  await walk(rootDir);
-  return manifest;
-}
-
-async function compareDirectories(repoDir: string, configDir: string): Promise<ConfigFile['status']> {
-  const configExists = await fileExists(configDir);
-  if (!configExists) {
+function getDirectoryStatus(
+  expectedFiles: ManagedFileRecord[],
+  actualFiles: ManagedFileRecord[],
+  actualTopLevels: Set<string>
+): ConfigFile['status'] {
+  if (!actualTopLevels.has(expectedFiles[0]?.relativePath.split('/')[0] || '')) {
     return 'new';
   }
 
-  const [repoManifest, configManifest] = await Promise.all([
-    buildDirectoryManifest(repoDir),
-    buildDirectoryManifest(configDir),
-  ]);
-
-  if (repoManifest.size !== configManifest.size) {
+  if (expectedFiles.length !== actualFiles.length) {
     return 'different';
   }
 
-  for (const [relativePath, repoHash] of repoManifest.entries()) {
-    if (configManifest.get(relativePath) !== repoHash) {
+  const actualMap = new Map(actualFiles.map((file) => [file.relativePath, file]));
+
+  for (const file of expectedFiles) {
+    const actualFile = actualMap.get(file.relativePath);
+    if (!actualFile || actualFile.sha256 !== file.sha256 || actualFile.mode !== file.mode) {
       return 'different';
     }
   }
@@ -73,8 +43,8 @@ async function compareDirectories(repoDir: string, configDir: string): Promise<C
 
 export async function detectConfig(frameworkId: string): Promise<ConfigDetectionResult> {
   const frameworkDir = await getFrameworkSourceDir(frameworkId);
-  const configExists = await fileExists(CONFIG_DIR);
-  
+  const configExists = await pathExists(CONFIG_DIR);
+
   if (!configExists) {
     return {
       configDirExists: false,
@@ -82,51 +52,60 @@ export async function detectConfig(frameworkId: string): Promise<ConfigDetection
       files: [],
     };
   }
-  
+
+  const [frameworkTree, configTree] = await Promise.all([
+    collectManagedTree(frameworkDir, MANAGED_CONFIG_ENTRIES),
+    collectManagedTree(CONFIG_DIR, MANAGED_CONFIG_ENTRIES),
+  ]);
+
+  const inspectionErrors = [...frameworkTree.errors, ...configTree.errors];
+  if (inspectionErrors.length > 0) {
+    throw new Error(inspectionErrors.join(' | '));
+  }
+
+  const configTopLevels = new Set(configTree.manifest.topLevelEntries);
+  const configFilesByPath = new Map(
+    configTree.manifest.files.map((file) => [file.relativePath, file])
+  );
   const files: ConfigFile[] = [];
-  
+
   for (const file of MANAGED_CONFIG_FILES) {
-    const repoPath = path.join(frameworkDir, file);
-    const configPath = path.join(CONFIG_DIR, file);
-    
-    const repoExists = await fileExists(repoPath);
-    const configExistsFlag = await fileExists(configPath);
-    
-    if (!repoExists) continue;
-    
-    const repoHash = await getFileHash(repoPath);
-    const configHash = configExistsFlag ? await getFileHash(configPath) : '';
-    
-    let status: ConfigFile['status'] = 'new';
-    if (configExistsFlag) {
-      if (repoHash === configHash) {
-        status = 'identical';
-      } else {
-        status = 'different';
-      }
+    const repoFile = frameworkTree.manifest.files.find((entry) => entry.relativePath === file);
+    if (!repoFile) {
+      continue;
     }
-    
+
+    const currentFile = configFilesByPath.get(file);
+    const status: ConfigFile['status'] = !configTopLevels.has(file)
+      ? 'new'
+      : currentFile && currentFile.sha256 === repoFile.sha256 && currentFile.mode === repoFile.mode
+        ? 'identical'
+        : 'different';
+
     files.push({
       path: file,
       status,
-      repoHash,
-      currentHash: configHash || undefined,
+      repoHash: repoFile.sha256,
+      currentHash: currentFile?.sha256,
     });
   }
-  
-  for (const directory of MANAGED_CONFIG_DIRECTORIES) {
-    const repoDir = path.join(frameworkDir, directory);
-    const configDir = path.join(CONFIG_DIR, directory);
-    const repoDirExists = await fileExists(repoDir);
 
-    if (repoDirExists) {
-      files.push({
-        path: `${directory}/`,
-        status: await compareDirectories(repoDir, configDir),
-      });
+  for (const directory of MANAGED_CONFIG_DIRECTORIES) {
+    const expectedFiles = getDirectoryRecords(frameworkTree.manifest.files, directory);
+    if (expectedFiles.length === 0) {
+      continue;
     }
+
+    files.push({
+      path: `${directory}/`,
+      status: getDirectoryStatus(
+        expectedFiles,
+        getDirectoryRecords(configTree.manifest.files, directory),
+        configTopLevels
+      ),
+    });
   }
-  
+
   return {
     configDirExists: true,
     frameworkId,

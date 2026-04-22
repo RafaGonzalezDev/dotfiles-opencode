@@ -48,12 +48,29 @@ export interface ConfigDetectionResult {
   files: ConfigFile[];
 }
 
-export interface BackupManifest {
+export interface ManagedFileRecord {
+  relativePath: string;
+  sha256: string;
+  mode: number;
+}
+
+export interface BackupManifestV1 {
   version: 1;
   createdAt: string;
   frameworkId: string | null;
   entries: string[];
 }
+
+export interface BackupManifestV2 {
+  version: 2;
+  backupId: string;
+  createdAt: string;
+  frameworkId: string | null;
+  topLevelEntries: string[];
+  files: ManagedFileRecord[];
+}
+
+export type BackupManifest = BackupManifestV1 | BackupManifestV2;
 
 export interface BackupResult {
   success: boolean;
@@ -77,6 +94,7 @@ export interface InstallResult {
   filesInstalled: number;
   frameworkId?: string;
   errors: string[];
+  rolledBack?: boolean;
 }
 
 export interface VerifyResult {
@@ -93,10 +111,18 @@ export interface OpenCodeUpdateResult {
     | 'unchanged'
     | 'verification-mismatch'
     | 'unverified'
+    | 'path-warning'
     | 'failed';
   method: OpenCodeInstallMethod | null;
   previousVersion?: string | null;
   currentVersion?: string | null;
   activeInstallMethod?: OpenCodeInstallMethod | null;
   error?: string;
+}
+
+export interface RuntimeInstallResult {
+  success: boolean;
+  error?: string;
+  warning?: string;
+  version?: string | null;
 }
