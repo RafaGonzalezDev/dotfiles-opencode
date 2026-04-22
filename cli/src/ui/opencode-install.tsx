@@ -26,14 +26,17 @@ export function OpenCodeInstallScreen({
   const items: Array<Parameters<typeof MenuList<string>>[0]['items'][number]> = [
     { type: 'section', key: 'methods', label: 'Install methods' },
   ];
-  
+
   if (os !== 'windows') {
     items.push(
       {
         type: 'action',
         key: 'homebrew',
-        label: homebrewInstalled ? 'Homebrew (Recommended)' : 'Install Homebrew + OpenCode (Recommended)',
+        label: homebrewInstalled
+          ? 'Homebrew (Recommended)'
+          : 'Homebrew (manual install first)',
         value: 'homebrew',
+        tone: homebrewInstalled ? undefined : 'secondary',
       },
       {
         type: 'action',
@@ -51,7 +54,7 @@ export function OpenCodeInstallScreen({
       value: 'npm',
     });
   }
-  
+
   items.push({
     type: 'action',
     key: 'manual',
@@ -59,7 +62,7 @@ export function OpenCodeInstallScreen({
     value: 'manual',
     tone: 'secondary',
   });
-  
+
   const handleSelect = (value: string) => {
     switch (value) {
       case 'homebrew':
@@ -73,7 +76,7 @@ export function OpenCodeInstallScreen({
         break;
     }
   };
-  
+
   return (
     <ScreenLayout
       title="OpenCode is not installed"
@@ -92,7 +95,7 @@ export function OpenCodeInstallScreen({
                 <Text dimColor>
                   {homebrewInstalled
                     ? "Homebrew keeps upgrades simpler with 'brew upgrade'."
-                    : 'Homebrew is the preferred path on Unix-like systems.'}
+                    : 'If Homebrew is not installed yet, the CLI will show the official install command instead of running it automatically.'}
                 </Text>
                 <Text dimColor>npm remains the portable fallback across environments.</Text>
               </Box>
@@ -105,7 +108,12 @@ export function OpenCodeInstallScreen({
       footer={<KeyHints hints={[{ keyLabel: '↑/↓', description: 'move' }, { keyLabel: 'Enter', description: 'select' }, { keyLabel: 'Esc', description: 'back' }]} />}
     >
       <SectionCard title="Choose installation method">
-        <MenuList<string> items={items} onSelect={handleSelect} onEscape={onBack} initialValue="homebrew" />
+        <MenuList<string>
+          items={items}
+          onSelect={handleSelect}
+          onEscape={onBack}
+          initialValue={os !== 'windows' ? 'homebrew' : 'npm'}
+        />
       </SectionCard>
     </ScreenLayout>
   );

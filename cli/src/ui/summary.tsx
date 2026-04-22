@@ -30,46 +30,53 @@ export function SummaryScreen({
   const configDir = getConfigDir();
   const isSuccess = installResult.status === 'success' && !hasErrors;
   const isSkipped = installResult.status === 'skipped' && !hasErrors;
+  const wasRolledBack = installResult.rolledBack === true;
   const title =
     isSkipped
       ? 'Run completed without framework changes'
       : isSuccess
-      ? 'Installation successful!'
-      : installResult.status === 'partial'
-        ? 'Installation completed partially'
-        : 'Installation completed with errors';
+        ? 'Installation successful!'
+        : wasRolledBack
+          ? 'Installation rolled back after errors'
+          : installResult.status === 'partial'
+            ? 'Installation completed partially'
+            : 'Installation completed with errors';
   const subtitle =
     isSkipped
       ? 'OpenCode was checked successfully and the framework installation step was skipped.'
       : isSuccess
-      ? 'The managed OpenCode configuration has been installed successfully.'
-      : installResult.status === 'partial'
-        ? 'The install finished with recoverable issues. Review warnings and errors below.'
-        : 'The setup finished with errors. Review the reported issues before retrying.';
+        ? 'The managed OpenCode configuration has been installed successfully.'
+        : wasRolledBack
+          ? 'The installer detected a blocking issue and restored the previous managed configuration automatically.'
+          : installResult.status === 'partial'
+            ? 'The install finished with recoverable issues. Review warnings and errors below.'
+            : 'The setup finished with errors. Review the reported issues before retrying.';
 
   const runtimeUpdateLabel =
     openCodeUpdateResult?.status === 'updated'
       ? `updated via ${openCodeUpdateResult.method}${
-            openCodeUpdateResult.previousVersion || openCodeUpdateResult.currentVersion
-              ? ` (${openCodeUpdateResult.previousVersion || 'unknown'} -> ${openCodeUpdateResult.currentVersion || 'unknown'})`
-              : ''
-          }`
+          openCodeUpdateResult.previousVersion || openCodeUpdateResult.currentVersion
+            ? ` (${openCodeUpdateResult.previousVersion || 'unknown'} -> ${openCodeUpdateResult.currentVersion || 'unknown'})`
+            : ''
+        }`
       : openCodeUpdateResult?.status === 'unchanged'
         ? `command completed via ${openCodeUpdateResult.method}, but the active binary version did not change${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
       : openCodeUpdateResult?.status === 'verification-mismatch'
         ? `command completed via ${openCodeUpdateResult.method}, but the active binary is linked to ${openCodeUpdateResult.activeInstallMethod || 'another installation'}${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
       : openCodeUpdateResult?.status === 'unverified'
         ? `command completed via ${openCodeUpdateResult.method}, but the active installation could not be verified${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
+      : openCodeUpdateResult?.status === 'path-warning'
+        ? openCodeUpdateResult.error || 'OpenCode was updated, but the active shell PATH still points somewhere else.'
       : openCodeUpdateResult?.status === 'skipped'
         ? `skipped by user${openCodeUpdateResult.currentVersion ? ` (${openCodeUpdateResult.currentVersion})` : ''}`
-          : openCodeUpdateResult?.status === 'failed'
-            ? `failed via ${openCodeUpdateResult.method}${
-                openCodeUpdateResult.currentVersion || openCodeUpdateResult.previousVersion
+        : openCodeUpdateResult?.status === 'failed'
+          ? `failed via ${openCodeUpdateResult.method}${
+              openCodeUpdateResult.currentVersion || openCodeUpdateResult.previousVersion
                 ? ` (${openCodeUpdateResult.currentVersion || openCodeUpdateResult.previousVersion})`
                 : ''
             }`
           : null;
-  
+
   return (
     <ScreenLayout
       title={title}
@@ -90,6 +97,11 @@ export function SummaryScreen({
               Framework install: <Text dimColor>{currentFrameworkName || 'current framework unchanged'}</Text>
             </Text>
           )}
+          {frameworkName && !isSkipped && (
+            <Text>
+              Target framework: <Text dimColor>{frameworkName}</Text>
+            </Text>
+          )}
           {backupResult?.backupPath && (
             <Text>
               Backup path:{' '}
@@ -107,7 +119,7 @@ export function SummaryScreen({
 
       {installIssues && (
         <Box paddingBottom={1}>
-          <SectionCard title="Install errors">
+          <SectionCard title={wasRolledBack ? 'Blocking errors (rollback completed)' : 'Install errors'}>
             {installResult.errors.map((error) => (
               <Text key={error} color="red">- {error}</Text>
             ))}
@@ -124,7 +136,7 @@ export function SummaryScreen({
           </SectionCard>
         </Box>
       )}
-      
+
       {verificationIssues && (
         <Box paddingBottom={1}>
           <SectionCard title="Verification errors">

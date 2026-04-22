@@ -21,7 +21,7 @@ import { RecentBackupsScreen } from './ui/recent-backups.js';
 import { DifferencesScreen } from './ui/differences.js';
 import { InstallConfirmationScreen } from './ui/install-confirmation.js';
 import { FrameworkSelectionScreen } from './ui/framework-selection.js';
-import { installHomebrew } from './installers/homebrew.js';
+import { getHomebrewInstallCommand } from './installers/homebrew.js';
 import { getOpenCodeInstallCommand, installOpenCode, updateOpenCode } from './installers/opencode.js';
 import { MANAGED_CONFIG_ENTRIES } from './utils/managed-config.js';
 import type {
@@ -150,6 +150,7 @@ export function App({ flags }: AppProps) {
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
   const [installResult, setInstallResult] = useState<InstallResult | null>(null);
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
+  const [runtimeWarnings, setRuntimeWarnings] = useState<string[]>([]);
   const [installMessage, setInstallMessage] = useState(INSTALL_MESSAGES[0]);
   const [opencodeInstallError, setOpencodeInstallError] = useState<string | null>(null);
   const [openCodeUpdateResult, setOpenCodeUpdateResult] = useState<OpenCodeUpdateResult>({
@@ -168,6 +169,7 @@ export function App({ flags }: AppProps) {
 
   const handleWelcomeStartSetup = () => {
     setWelcomeMessage(null);
+    setRuntimeWarnings([]);
     setPhase('system-check');
     setIsChecking(true);
     void runSystemCheck();
@@ -307,24 +309,28 @@ export function App({ flags }: AppProps) {
 
   const handleHomebrewInstall = async () => {
     setOpencodeInstallError(null);
-    setPhase('opencode-installing');
+    setRuntimeWarnings([]);
 
-    const homebrewResult = await installHomebrew((message) => {
-      setInstallMessage(message);
-    });
-
-    if (!homebrewResult.success) {
-      console.error('Homebrew installation failed:', homebrewResult.error);
-      setOpencodeInstallError(homebrewResult.error || 'Failed to install Homebrew.');
-      setPhase('opencode-install');
+    if (!systemInfo?.homebrewInstalled) {
+      setManualInstallCommand(getHomebrewInstallCommand());
+      setPhase('opencode-manual');
       return;
     }
+
+    setPhase('opencode-installing');
 
     const openCodeResult = await installOpenCode('homebrew', (message) => {
       setInstallMessage(message);
     });
 
     if (openCodeResult.success) {
+      if (openCodeResult.warning) {
+        setRuntimeWarnings([openCodeResult.warning]);
+        setOpenCodeStatus(await checkOpenCode());
+        await loadFrameworksAndContinue();
+        return;
+      }
+
       await runOpenCodeCheck();
       return;
     }
@@ -336,6 +342,7 @@ export function App({ flags }: AppProps) {
 
   const handleNpmInstall = async () => {
     setOpencodeInstallError(null);
+    setRuntimeWarnings([]);
     setPhase('opencode-installing');
 
     const result = await installOpenCode('npm', (message) => {
@@ -343,6 +350,13 @@ export function App({ flags }: AppProps) {
     });
 
     if (result.success) {
+      if (result.warning) {
+        setRuntimeWarnings([result.warning]);
+        setOpenCodeStatus(await checkOpenCode());
+        await loadFrameworksAndContinue();
+        return;
+      }
+
       await runOpenCodeCheck();
       return;
     }
@@ -353,6 +367,12 @@ export function App({ flags }: AppProps) {
   };
 
   const handleManualInstall = () => {
+    if (systemInfo && systemInfo.os !== 'windows' && !systemInfo.homebrewInstalled) {
+      setManualInstallCommand(getHomebrewInstallCommand());
+      setPhase('opencode-manual');
+      return;
+    }
+
     const method =
       systemInfo && systemInfo.os !== 'windows' && systemInfo.homebrewInstalled
         ? 'homebrew'
@@ -364,6 +384,7 @@ export function App({ flags }: AppProps) {
   const handleOpenCodeUpdate = async (method: OpenCodeInstallMethod) => {
     const previousVersion = openCodeStatus?.version || null;
     setOpencodeInstallError(null);
+    setRuntimeWarnings([]);
     setOpenCodeUpdateResult({
       status: 'idle',
       method,
@@ -393,6 +414,21 @@ export function App({ flags }: AppProps) {
 
     const refreshedStatus = await checkOpenCode();
     setOpenCodeStatus(refreshedStatus);
+
+    if (result.warning) {
+      setRuntimeWarnings([result.warning]);
+      setOpenCodeUpdateResult({
+        status: 'path-warning',
+        method,
+        previousVersion,
+        currentVersion: result.version || refreshedStatus.version,
+        activeInstallMethod: refreshedStatus.activeInstallMethod,
+        error: result.warning,
+      });
+      await loadFrameworksAndContinue();
+      return;
+    }
+
     setOpenCodeUpdateResult(classifyOpenCodeUpdateResult(method, previousVersion, refreshedStatus));
     await loadFrameworksAndContinue();
   };
@@ -405,7 +441,8 @@ export function App({ flags }: AppProps) {
         current.status === 'unchanged' ||
         current.status === 'failed' ||
         current.status === 'verification-mismatch' ||
-        current.status === 'unverified'
+        current.status === 'unverified' ||
+        current.status === 'path-warning'
       ) {
         return current;
       }
@@ -443,8 +480,19 @@ export function App({ flags }: AppProps) {
       await runInstallation(detection);
     } catch (error) {
       console.error('Config detection failed:', error);
-      setPhase('installation');
-      await runInstallation();
+      setInstallResult({
+        status: 'failed',
+        success: false,
+        filesInstalled: 0,
+        frameworkId,
+        errors: [error instanceof Error ? error.message : 'Config detection failed'],
+      });
+      setVerifyResult({
+        valid: false,
+        errors: ['Installation aborted because preflight detection failed'],
+        warnings: [...runtimeWarnings],
+      });
+      setPhase('summary');
     }
   }
 
@@ -482,7 +530,7 @@ export function App({ flags }: AppProps) {
       errors: [],
     });
     setBackupResult(null);
-    setVerifyResult({ valid: true, errors: [], warnings: [] });
+    setVerifyResult({ valid: true, errors: [], warnings: [...runtimeWarnings] });
     setPhase('summary');
   };
 
@@ -596,7 +644,7 @@ export function App({ flags }: AppProps) {
         frameworkId: selectedFramework.id,
         errors: [],
       });
-      setVerifyResult({ valid: true, errors: [], warnings: [] });
+      setVerifyResult({ valid: true, errors: [], warnings: [...runtimeWarnings] });
       return;
     }
 
@@ -630,6 +678,18 @@ export function App({ flags }: AppProps) {
       const result = await installConfig(selectedFramework.id);
       setInstallResult(result);
 
+      if (!result.success) {
+        setVerifyResult({
+          valid: false,
+          errors: result.rolledBack
+            ? ['Installation failed and the previous managed configuration was restored automatically']
+            : ['Installation failed'],
+          warnings: [...runtimeWarnings],
+        });
+        setPhase('summary');
+        return;
+      }
+
       setPhase('verification');
       await runVerification();
     } catch (error) {
@@ -647,15 +707,28 @@ export function App({ flags }: AppProps) {
   }
 
   async function runVerification() {
+    if (!selectedFramework) {
+      setVerifyResult({
+        valid: false,
+        errors: ['Verification failed because no framework is selected'],
+        warnings: [...runtimeWarnings],
+      });
+      setPhase('summary');
+      return;
+    }
+
     try {
-      const result = await verifyInstallation();
-      setVerifyResult(result);
+      const result = await verifyInstallation(selectedFramework.id);
+      setVerifyResult({
+        ...result,
+        warnings: [...runtimeWarnings, ...result.warnings],
+      });
     } catch (error) {
       console.error('Verification failed:', error);
       setVerifyResult({
         valid: false,
         errors: [error instanceof Error ? error.message : 'Unknown error'],
-        warnings: [],
+        warnings: [...runtimeWarnings],
       });
     } finally {
       setPhase('summary');

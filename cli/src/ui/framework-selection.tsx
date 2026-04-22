@@ -35,6 +35,10 @@ function getUpdateFeedback(result: OpenCodeUpdateResult): string {
     return 'OpenCode update command completed, but the CLI could not verify that it affected the active installation.';
   }
 
+  if (result.status === 'path-warning') {
+    return result.error || 'OpenCode was updated, but the active shell PATH does not point to the verified binary yet.';
+  }
+
   if (result.status === 'skipped') {
     return `OpenCode update skipped. Current version: ${result.currentVersion || 'unknown'}.`;
   }
@@ -186,9 +190,10 @@ export function FrameworkSelectionScreen({
                     ? 'success'
                     : openCodeUpdateResult.status === 'failed' ||
                         openCodeUpdateResult.status === 'verification-mismatch'
-                       ? 'danger'
+                      ? 'danger'
                       : openCodeUpdateResult.status === 'unchanged' ||
-                          openCodeUpdateResult.status === 'unverified'
+                          openCodeUpdateResult.status === 'unverified' ||
+                          openCodeUpdateResult.status === 'path-warning'
                         ? 'warning'
                         : 'info'
                 }
