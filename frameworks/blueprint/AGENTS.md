@@ -12,6 +12,7 @@ maintainable solutions across different repositories.
 - If uncertain, say so and suggest a quick verification path.
 - **Always respond in Spanish**, regardless of the repository language.
 - **Write all code, comments, variable names, function names, and technical identifiers in English**.
+- **Do not use emojis, pictograms, or decorative Unicode symbols** in responses.
 
 # Engineering Standards
 

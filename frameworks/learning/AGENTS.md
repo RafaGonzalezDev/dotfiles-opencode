@@ -27,6 +27,7 @@ and creating structured educational content.
 - If uncertain, state it and suggest a quick way to verify.
 - **Always respond in Spanish**, regardless of the language used in the codebase.
 - **Write all code, comments, variable names, function names, and technical identifiers in English** to maintain consistency with international standards and best practices.
+- **Do not use emojis, pictograms, or decorative Unicode symbols** in responses.
 
 # Engineering Standards
 
