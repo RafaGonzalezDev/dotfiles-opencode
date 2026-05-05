@@ -48,50 +48,43 @@
     "plan": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "build": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "explorer": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "worker": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "tester": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "debugger": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "reviewer": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     }
   }

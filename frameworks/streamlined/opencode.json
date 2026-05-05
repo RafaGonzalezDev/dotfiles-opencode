@@ -29,11 +29,6 @@
       "type": "local",
       "command": ["npx", "-y", "@upstash/context7-mcp"],
       "enabled": true
-    },
-    "atlassian": {
-      "type": "remote",
-      "url": "https://mcp.atlassian.com/v1/mcp",
-      "enabled": true
     }
   },
   "agent": {
@@ -48,50 +43,43 @@
     "plan": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "build": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "explorer": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "worker": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "tester": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "debugger": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     },
     "reviewer": {
       "tools": {
         "playwright*": true,
-        "context7*": true,
-        "atlassian*": true
+        "context7*": true
       }
     }
   }
