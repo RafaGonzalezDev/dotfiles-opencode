@@ -15,6 +15,13 @@
             "context": 131072,
             "output": 16384
           }
+        },
+        "Nemotron-3-Nano-30B-A3B-Q4_K_M.gguf": {
+          "name": "Nemotron 3 Nano 30B A3B Q4_K_M Local",
+          "limit": {
+            "context": 262144,
+            "output": 16384
+          }
         }
       }
     }
