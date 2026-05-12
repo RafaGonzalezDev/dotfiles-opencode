@@ -37,4 +37,11 @@ function parseFlags(): Flags {
 }
 
 const flags = parseFlags();
-render(React.createElement(App, { flags }));
+const inkApp = render(React.createElement(App, { flags }));
+
+try {
+  await inkApp.waitUntilExit();
+} finally {
+  process.stdout.write('\u001B[?25h');
+  inkApp.cleanup();
+}

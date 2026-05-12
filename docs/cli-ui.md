@@ -87,6 +87,28 @@ The summary and restore flows now distinguish these outcomes explicitly:
 - invalid or non-restorable backup selection
 - successful restore from both v2 and legacy v1 manifests
 
+## Clean terminal exit
+
+The interactive CLI now exits through Ink's application lifecycle instead of
+terminating React handlers with `process.exit()`. The final summary screen
+accepts any key to close the app cleanly.
+
+This keeps terminal ownership inside the UI layer so Ink can unmount, release
+raw input mode, and restore cursor visibility. The entrypoint also writes the
+standard cursor-show escape sequence as a defensive fallback after Ink exits.
+
+### Key files
+
+- `cli/src/index.ts`
+- `cli/src/app.tsx`
+- `cli/src/ui/summary.tsx`
+
+### Why
+
+Ink hides the terminal cursor while rendering. If the process exits before Ink
+finishes its cleanup, the terminal can remain with the cursor hidden after the
+installer completes or is cancelled.
+
 ## Safety constraints surfaced in UI
 
 The CLI treats these cases as blocking errors and reports them clearly:

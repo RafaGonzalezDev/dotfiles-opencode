@@ -1,8 +1,9 @@
-import { Text, Box } from 'ink';
+import { Text, Box, useInput } from 'ink';
 import React from 'react';
 import type { BackupResult, InstallResult, OpenCodeUpdateResult, VerifyResult } from '../types/index.js';
 import { getConfigDir } from '../utils/paths.js';
 import {
+  KeyHints,
   ScreenLayout,
   SectionCard,
 } from './components/primitives.js';
@@ -14,6 +15,7 @@ interface SummaryScreenProps {
   backupResult: BackupResult | null;
   openCodeUpdateResult?: OpenCodeUpdateResult | null;
   verifyResult: VerifyResult;
+  onExit: () => void;
 }
 
 export function SummaryScreen({
@@ -23,6 +25,7 @@ export function SummaryScreen({
   backupResult,
   openCodeUpdateResult,
   verifyResult,
+  onExit,
 }: SummaryScreenProps) {
   const installIssues = installResult.errors.length > 0;
   const verificationIssues = verifyResult.errors.length > 0;
@@ -51,6 +54,10 @@ export function SummaryScreen({
           : installResult.status === 'partial'
             ? 'The install finished with recoverable issues. Review warnings and errors below.'
             : 'The setup finished with errors. Review the reported issues before retrying.';
+
+  useInput(() => {
+    onExit();
+  });
 
   const runtimeUpdateLabel =
     openCodeUpdateResult?.status === 'updated'
@@ -82,6 +89,7 @@ export function SummaryScreen({
       title={title}
       step="Run complete"
       subtitle={subtitle}
+      footer={<KeyHints hints={[{ keyLabel: 'Any key', description: 'exit' }]} />}
     >
       <Box paddingBottom={1}>
         <SectionCard title="Details">

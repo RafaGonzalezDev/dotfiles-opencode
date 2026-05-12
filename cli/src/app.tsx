@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useApp } from 'ink';
 import Spinner from 'ink-spinner';
 import { gatherSystemInfo, getBlockingSystemFailures, getSystemChecks } from './checks/system.js';
 import { checkOpenCode } from './checks/opencode.js';
@@ -138,6 +138,7 @@ function classifyOpenCodeUpdateResult(
 }
 
 export function App({ flags }: AppProps) {
+  const { exit } = useApp();
   const [phase, setPhase] = useState<Phase>('welcome');
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [systemChecks, setSystemChecks] = useState<CheckResult[]>([]);
@@ -176,7 +177,7 @@ export function App({ flags }: AppProps) {
   };
 
   const handleExit = () => {
-    process.exit(0);
+    exit();
   };
 
   async function runSystemCheck() {
@@ -608,7 +609,7 @@ export function App({ flags }: AppProps) {
 
   const handleCancel = () => {
     console.log('\nInstallation cancelled.');
-    process.exit(0);
+    exit();
   };
 
   async function runInstallation(detectionOverride?: ConfigDetectionResult) {
@@ -951,6 +952,7 @@ export function App({ flags }: AppProps) {
           backupResult={backupResult}
           openCodeUpdateResult={openCodeUpdateResult}
           verifyResult={verifyResult || { valid: false, errors: ['Verification not run'], warnings: [] }}
+          onExit={handleExit}
         />
       );
 
